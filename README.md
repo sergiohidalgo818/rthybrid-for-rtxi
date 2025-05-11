@@ -11,6 +11,7 @@ For the standalone version of RTHybrid check https://github.com/GNB-UAM/RTHybrid
 ## Installation
 Executing `sudo sh install.sh` will compile and install all the modules at once (requires sudo permission).
 
+Do it inside the directory of your RTXI version.
 
 ## Currently included models
 - **Neuron models:**
