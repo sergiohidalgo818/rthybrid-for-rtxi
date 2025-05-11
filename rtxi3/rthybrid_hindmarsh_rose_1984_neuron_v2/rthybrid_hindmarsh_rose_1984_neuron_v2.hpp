@@ -21,9 +21,10 @@
  */
 #include <rtxi/widgets.hpp>
 
-namespace rthybrid_hindmarsh_rose_1984_neuron {
+namespace rthybrid_hindmarsh_rose_1984_neuron_v2 {
 
-constexpr std::string_view MODULE_NAME = "rthybrid_hindmarsh_rose_1984_neuron";
+constexpr std::string_view MODULE_NAME =
+    "rthybrid_hindmarsh_rose_1984_neuron_v2";
 
 enum VARIABLE : Widgets::Variable::Id {
   NM_HINDMARSH_ROSE_1984_V = 0,
@@ -41,6 +42,7 @@ enum VIEW_PARAMETER : Widgets::Variable::Id {
   V_NM_HINDMARSH_ROSE_1984_R,
   V_NM_HINDMARSH_ROSE_1984_S,
   V_NM_HINDMARSH_ROSE_1984_XR,
+  V_NM_HINDMARSH_ROSE_1984_VH,
   V_NM_HINDMARSH_ROSE_1984_V0,
   V_NM_HINDMARSH_ROSE_1984_Y0,
   V_NM_HINDMARSH_ROSE_1984_Z0,
@@ -57,10 +59,11 @@ enum ARRAY_PARAMETER : Widgets::Variable::Id {
   NM_HINDMARSH_ROSE_1984_C,
   NM_HINDMARSH_ROSE_1984_D,
   NM_HINDMARSH_ROSE_1984_DT,
-  NM_HINDMARSH_ROSE_1984_SYN,
-  NM_HINDMARSH_ROSE_1984_XR,
   NM_HINDMARSH_ROSE_1984_R,
   NM_HINDMARSH_ROSE_1984_S,
+  NM_HINDMARSH_ROSE_1984_XR,
+  NM_HINDMARSH_ROSE_1984_VH,
+  NM_HINDMARSH_ROSE_1984_SYN,
 };
 
 inline std::vector<Widgets::Variable::Info> get_default_vars() {
@@ -83,6 +86,8 @@ inline std::vector<Widgets::Variable::Info> get_default_vars() {
        Widgets::Variable::DOUBLE_PARAMETER, 4.0},
       {V_NM_HINDMARSH_ROSE_1984_XR, "xr", "Parameter xr",
        Widgets::Variable::DOUBLE_PARAMETER, -1.6},
+      {V_NM_HINDMARSH_ROSE_1984_VH, "Vh", "Parameter Vh",
+       Widgets::Variable::DOUBLE_PARAMETER, 0.2},
       {V_NM_HINDMARSH_ROSE_1984_V0, "x0", "Membrane potential",
        Widgets::Variable::DOUBLE_PARAMETER, -0.712841},
       {V_NM_HINDMARSH_ROSE_1984_Y0, "y0", "Parameter y",
@@ -125,7 +130,7 @@ public:
   // here
 private:
   double vars_model[3];
-  double params_model[10];
+  double params_model[11];
   double period, freq;
   double burst_duration, burst_duration_value;
   double s_points;
@@ -148,4 +153,4 @@ public:
   explicit Plugin(Event::Manager *ev_manager);
 };
 
-} // namespace rthybrid_hindmarsh_rose_1984_neuron
+} // namespace rthybrid_hindmarsh_rose_1984_neuron_v2
