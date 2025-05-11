@@ -25,35 +25,86 @@
 #include <iostream>
 #include <main_window.h>
 
-extern "C" Plugin::Object*
-createRTXIPlugin(void)
-{
+extern "C" Plugin::Object *createRTXIPlugin(void) {
   return new RTHybridAmplitudeScaleOffset();
 }
 
 static DefaultGUIModel::variable_t vars[] = {
-  {"Min 1 (V)", "Neuron 1 minimum membrane potential (in V)", DefaultGUIModel::INPUT,},
-  {"Max 1 (V)", "Neuron 1 maximum membrane potential (in V)", DefaultGUIModel::INPUT,},
-  {"Min 2 (V)", "Neuron 2 minimum membrane potential (in V)", DefaultGUIModel::INPUT,},
-  {"Max 2 (V)", "Neuron 2 maximum membrane potential (in V)", DefaultGUIModel::INPUT,},
+    {
+        "Min 1 (V)",
+        "Neuron 1 minimum membrane potential (in V)",
+        DefaultGUIModel::INPUT,
+    },
+    {
+        "Max 1 (V)",
+        "Neuron 1 maximum membrane potential (in V)",
+        DefaultGUIModel::INPUT,
+    },
+    {
+        "Min 2 (V)",
+        "Neuron 2 minimum membrane potential (in V)",
+        DefaultGUIModel::INPUT,
+    },
+    {
+        "Max 2 (V)",
+        "Neuron 2 maximum membrane potential (in V)",
+        DefaultGUIModel::INPUT,
+    },
 
-  {"Scale 1-2", "Scale from neuron 1 to neuron 2", DefaultGUIModel::OUTPUT, },
-  {"Offset 1-2", "Offset from neuron 1 to neuron 2", DefaultGUIModel::OUTPUT, },
-  {"Scale 2-1", "Scale from neuron 2 to neuron 1", DefaultGUIModel::OUTPUT, },
-  {"Offset 2-1", "Offset from neuron 2 to neuron 1", DefaultGUIModel::OUTPUT, },
+    {
+        "Scale 1-2",
+        "Scale from neuron 1 to neuron 2",
+        DefaultGUIModel::OUTPUT,
+    },
+    {
+        "Offset 1-2",
+        "Offset from neuron 1 to neuron 2",
+        DefaultGUIModel::OUTPUT,
+    },
+    {
+        "Scale 2-1",
+        "Scale from neuron 2 to neuron 1",
+        DefaultGUIModel::OUTPUT,
+    },
+    {
+        "Offset 2-1",
+        "Offset from neuron 2 to neuron 1",
+        DefaultGUIModel::OUTPUT,
+    },
 
-  {"Scale 1-2", "Scale from neuron 1 to neuron 2", DefaultGUIModel::STATE,},
-  {"Offset 1-2", "Offset from neuron 1 to neuron 2", DefaultGUIModel::STATE,},
-  {"Scale 2-1", "Scale from neuron 2 to neuron 1", DefaultGUIModel::STATE,},
-  {"Offset 2-1", "Offset from neuron 2 to neuron 1", DefaultGUIModel::STATE,},
+    {
+        "Scale 1-2",
+        "Scale from neuron 1 to neuron 2",
+        DefaultGUIModel::STATE,
+    },
+    {
+        "Offset 1-2",
+        "Offset from neuron 1 to neuron 2",
+        DefaultGUIModel::STATE,
+    },
+    {
+        "Scale 2-1",
+        "Scale from neuron 2 to neuron 1",
+        DefaultGUIModel::STATE,
+    },
+    {
+        "Offset 2-1",
+        "Offset from neuron 2 to neuron 1",
+        DefaultGUIModel::STATE,
+    },
 };
 
 static size_t num_vars = sizeof(vars) / sizeof(DefaultGUIModel::variable_t);
 
 RTHybridAmplitudeScaleOffset::RTHybridAmplitudeScaleOffset(void)
-  : DefaultGUIModel("RTHybridAmplitudeScaleOffset", ::vars, ::num_vars)
-{
-  setWhatsThis("<p><b>RTHybrid Amplitude Scale Offset:</b><br>Given two neurons membrane potential minimum and maximum values, this module calculates the amplitude scale factor and offset between them, in both directions. i.e. if Neuron 1 membrane potential is multiplied by Scale 1-2 and added Offset 1-2, the result will be in the same amplitude range than Neuron 2 membrane potential, and viceversa.</p>");
+    : DefaultGUIModel("RTHybridAmplitudeScaleOffset", ::vars, ::num_vars) {
+  setWhatsThis(
+      "<p><b>RTHybrid Amplitude Scale Offset:</b><br>Given two neurons "
+      "membrane potential minimum and maximum values, this module calculates "
+      "the amplitude scale factor and offset between them, in both directions. "
+      "i.e. if Neuron 1 membrane potential is multiplied by Scale 1-2 and "
+      "added Offset 1-2, the result will be in the same amplitude range than "
+      "Neuron 2 membrane potential, and viceversa.</p>");
   DefaultGUIModel::createGUI(vars,
                              num_vars); // this is required to create the GUI
   initParameters();
@@ -64,13 +115,9 @@ RTHybridAmplitudeScaleOffset::RTHybridAmplitudeScaleOffset(void)
   QTimer::singleShot(0, this, SLOT(resizeMe()));
 }
 
-RTHybridAmplitudeScaleOffset::~RTHybridAmplitudeScaleOffset(void)
-{
-}
+RTHybridAmplitudeScaleOffset::~RTHybridAmplitudeScaleOffset(void) {}
 
-void
-RTHybridAmplitudeScaleOffset::execute(void)
-{
+void RTHybridAmplitudeScaleOffset::execute(void) {
   double min1 = input(0);
   double max1 = input(1);
   double min2 = input(2);
@@ -93,41 +140,38 @@ RTHybridAmplitudeScaleOffset::execute(void)
   return;
 }
 
-void
-RTHybridAmplitudeScaleOffset::initParameters(void)
-{
+void RTHybridAmplitudeScaleOffset::initParameters(void) {
   s12 = 1.0;
   s21 = 1.0;
   o12 = 0.0;
   o21 = 0.0;
 }
 
-void
-RTHybridAmplitudeScaleOffset::update(DefaultGUIModel::update_flags_t flag)
-{
+void RTHybridAmplitudeScaleOffset::update(
+    DefaultGUIModel::update_flags_t flag) {
   switch (flag) {
-    case INIT:
-      period = RT::System::getInstance()->getPeriod() * 1e-6; // ms
-      setState("Scale 1-2", s12);
-      setState("Offset 1-2", o12);
-      setState("Scale 2-1", s21);
-      setState("Offset 2-1", o21);
-      break;
+  case INIT:
+    period = RT::System::getInstance()->getPeriod() * 1e-6; // ms
+    setState("Scale 1-2", s12);
+    setState("Offset 1-2", o12);
+    setState("Scale 2-1", s21);
+    setState("Offset 2-1", o21);
+    break;
 
-    case MODIFY:
-      break;
+  case MODIFY:
+    break;
 
-    case UNPAUSE:
-      break;
+  case UNPAUSE:
+    break;
 
-    case PAUSE:
-      break;
+  case PAUSE:
+    break;
 
-    case PERIOD:
-      period = RT::System::getInstance()->getPeriod() * 1e-6; // ms
-      break;
+  case PERIOD:
+    period = RT::System::getInstance()->getPeriod() * 1e-6; // ms
+    break;
 
-    default:
-      break;
+  default:
+    break;
   }
 }

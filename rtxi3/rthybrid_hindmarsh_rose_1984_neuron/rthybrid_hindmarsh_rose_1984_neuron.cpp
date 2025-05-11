@@ -20,11 +20,14 @@
  * This is a template implementation file for a user module,
  */
 #include "rthybrid_hindmarsh_rose_1984_neuron.hpp"
+#include <QTimer>
 #include <cmath>
 #include <cstdio>
 #include <rtxi/rt.hpp>
 #include <rtxi/rtos.hpp>
-#include <rtxi/widgets.hpp>
+
+rthybrid_hindmarsh_rose_1984_neuron::Component
+    *rthybrid_hindmarsh_rose_1984_neuron::Component::instance = nullptr;
 
 rthybrid_hindmarsh_rose_1984_neuron::Plugin::Plugin(Event::Manager *ev_manager)
     : Widgets::Plugin(
@@ -39,6 +42,24 @@ rthybrid_hindmarsh_rose_1984_neuron::Panel::Panel(QMainWindow *main_window,
   setWhatsThis("<p><b>RTHybrid Hindmarsh-Rose (1984) neuron model</b></p>");
   createGUI(rthybrid_hindmarsh_rose_1984_neuron::get_default_vars(),
             {}); // this is required to create the GUI
+  auto edits = findChildren<QLineEdit *>();
+  v_edit = edits[V_NM_HINDMARSH_ROSE_1984_V];
+  sp_edit = edits[V_NM_HINDMARSH_ROSE_1984_SP];
+  dt_edit = edits[V_NM_HINDMARSH_ROSE_1984_DT];
+  syn_edit = edits[V_NM_HINDMARSH_ROSE_1984_SYN];
+  if (v_edit)
+    v_edit->setReadOnly(true);
+  if (sp_edit)
+    sp_edit->setReadOnly(true);
+  if (dt_edit)
+    dt_edit->setReadOnly(true);
+  if (syn_edit)
+    syn_edit->setReadOnly(true);
+
+  QTimer *timer = new QTimer(this);
+  connect(timer, &QTimer::timeout, this,
+          &rthybrid_hindmarsh_rose_1984_neuron::Panel::refresh);
+  timer->start(500); // refresh every 500 ms
   this->parentWidget()->adjustSize();
 }
 
@@ -48,10 +69,33 @@ rthybrid_hindmarsh_rose_1984_neuron::Component::Component(
           hplugin,
           std::string(rthybrid_hindmarsh_rose_1984_neuron::MODULE_NAME),
           rthybrid_hindmarsh_rose_1984_neuron::get_default_channels(),
-          rthybrid_hindmarsh_rose_1984_neuron::get_default_vars()) {}
+          rthybrid_hindmarsh_rose_1984_neuron::get_default_vars()) {
+
+  Component::instance = this;
+}
+
+void rthybrid_hindmarsh_rose_1984_neuron::Panel::refresh() {
+  auto *comp = rthybrid_hindmarsh_rose_1984_neuron::Component::instance;
+  if (comp && v_edit) {
+    v_edit->setText(
+        QString::number(comp->vars_model[NM_HINDMARSH_ROSE_1984_V]));
+  }
+  if (comp && sp_edit) {
+    sp_edit->setText(QString::number(comp->s_points));
+  }
+  if (comp && dt_edit) {
+    dt_edit->setText(
+        QString::number(comp->params_model[NM_HINDMARSH_ROSE_1984_DT]));
+  }
+  if (comp && syn_edit) {
+    syn_edit->setText(
+        QString::number(comp->params_model[NM_HINDMARSH_ROSE_1984_SYN]));
+  }
+}
 
 void rthybrid_hindmarsh_rose_1984_neuron::Component::execute() {
   // This is the real-time function that will be called
+
   switch (this->getState()) {
   case RT::State::EXEC:
     int i;
@@ -72,20 +116,9 @@ void rthybrid_hindmarsh_rose_1984_neuron::Component::execute() {
     writeoutput(0, vars_model[NM_HINDMARSH_ROSE_1984_V] / 1000.0);
     writeoutput(1, vars_model[NM_HINDMARSH_ROSE_1984_V]);
 
-    // TODO: Update values and refresh
-
-    // setValue<double>(V_NM_HINDMARSH_ROSE_1984_V,
-    //                  vars_model[NM_HINDMARSH_ROSE_1984_V]);
-    // setValue<double>(V_NM_HINDMARSH_ROSE_1984_SP, s_points);
-    // setValue<double>(V_NM_HINDMARSH_ROSE_1984_DT,
-    //                  params_model[NM_HINDMARSH_ROSE_1984_DT]);
-    // setValue<double>(V_NM_HINDMARSH_ROSE_1984_SYN,
-    //                  params_model[NM_HINDMARSH_ROSE_1984_SYN]);
-    //
     break;
   case RT::State::INIT:
     period = RT::OS::getPeriod() * 1e-6; // ms
-
     freq = 1.0 / (period * 1e-3);
 
     this->initParameters();
@@ -130,6 +163,7 @@ void rthybrid_hindmarsh_rose_1984_neuron::Component::execute() {
     vars_model[VARIABLE::NM_HINDMARSH_ROSE_1984_Z] =
         getValue<double>(V_NM_HINDMARSH_ROSE_1984_Z0);
 
+    setState(RT::State::PAUSE);
     break;
   case RT::State::PERIOD:
     period = RT::OS::getPeriod() * 1e-6; // ms
@@ -144,15 +178,6 @@ void rthybrid_hindmarsh_rose_1984_neuron::Component::execute() {
     break;
   case RT::State::PAUSE:
 
-    // TODO: Update values and refresh
-
-    // setValue<double>(V_NM_HINDMARSH_ROSE_1984_V,
-    //                  vars_model[NM_HINDMARSH_ROSE_1984_V]);
-    // setValue<double>(V_NM_HINDMARSH_ROSE_1984_SP, s_points);
-    // setValue<double>(V_NM_HINDMARSH_ROSE_1984_DT,
-    //                  params_model[NM_HINDMARSH_ROSE_1984_DT]);
-    // setValue<double>(V_NM_HINDMARSH_ROSE_1984_SYN,
-    //                  params_model[NM_HINDMARSH_ROSE_1984_SYN]);
     writeoutput(0, 0);
     writeoutput(1, 0);
 

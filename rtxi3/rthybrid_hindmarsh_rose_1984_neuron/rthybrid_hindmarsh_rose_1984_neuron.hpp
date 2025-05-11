@@ -19,6 +19,7 @@
 /*
  * This is a template implementation file for a user module,
  */
+#include <rtxi/rt.hpp>
 #include <rtxi/widgets.hpp>
 
 namespace rthybrid_hindmarsh_rose_1984_neuron {
@@ -44,10 +45,10 @@ enum VIEW_PARAMETER : Widgets::Variable::Id {
   V_NM_HINDMARSH_ROSE_1984_V0,
   V_NM_HINDMARSH_ROSE_1984_Y0,
   V_NM_HINDMARSH_ROSE_1984_Z0,
-  // V_NM_HINDMARSH_ROSE_1984_V,
-  // V_NM_HINDMARSH_ROSE_1984_SP,
-  // V_NM_HINDMARSH_ROSE_1984_DT,
-  // V_NM_HINDMARSH_ROSE_1984_SYN,
+  V_NM_HINDMARSH_ROSE_1984_V,
+  V_NM_HINDMARSH_ROSE_1984_SP,
+  V_NM_HINDMARSH_ROSE_1984_DT,
+  V_NM_HINDMARSH_ROSE_1984_SYN,
 };
 
 enum ARRAY_PARAMETER : Widgets::Variable::Id {
@@ -89,18 +90,16 @@ inline std::vector<Widgets::Variable::Info> get_default_vars() {
        Widgets::Variable::DOUBLE_PARAMETER, -1.936880},
       {V_NM_HINDMARSH_ROSE_1984_Z0, "z0", "Parameter z",
        Widgets::Variable::DOUBLE_PARAMETER, 3.165680},
-      // {V_NM_HINDMARSH_ROSE_1984_V, "v", "Membrane potential",
-      //  Widgets::Variable::DOUBLE_PARAMETER, 0.0},
-      // {V_NM_HINDMARSH_ROSE_1984_SP, "s_points", "Number of integration
-      // steps",
-      //  Widgets::Variable::DOUBLE_PARAMETER, 0.0},
-      // {V_NM_HINDMARSH_ROSE_1984_DT, "dt", "Integration time step",
-      //  Widgets::Variable::DOUBLE_PARAMETER, 0.05},
-      // {V_NM_HINDMARSH_ROSE_1984_SYN, "syn", "Synaptic current",
-      //  Widgets::Variable::DOUBLE_PARAMETER, 0.0},
+      {V_NM_HINDMARSH_ROSE_1984_V, "v", "Membrane potential",
+       Widgets::Variable::DOUBLE_PARAMETER, 0.0},
+      {V_NM_HINDMARSH_ROSE_1984_SP, "s_points", "Number of integration steps ",
+       Widgets::Variable::DOUBLE_PARAMETER, 0.0},
+      {V_NM_HINDMARSH_ROSE_1984_DT, "dt", "Integration time step",
+       Widgets::Variable::DOUBLE_PARAMETER, 0.00},
+      {V_NM_HINDMARSH_ROSE_1984_SYN, "syn", "Synaptic current",
+       Widgets::Variable::DOUBLE_PARAMETER, 0.0},
   };
 }
-
 inline std::vector<IO::channel_t> get_default_channels() {
   return {{"Vm (v)", "Membrane potential (in V)", IO::OUTPUT},
           {"Vm (mV)", "Membrane potential (in mV)", IO::OUTPUT},
@@ -112,23 +111,30 @@ class Panel : public Widgets::Panel {
   Q_OBJECT
 public:
   Panel(QMainWindow *main_window, Event::Manager *ev_manager);
-
-  // Any functions and data related to the GUI are to be placed here
+  // Any functions and data related to the GUI are to be placed
+  // here
+  void refresh();
+  QLineEdit *v_edit = nullptr;
+  QLineEdit *sp_edit = nullptr;
+  QLineEdit *dt_edit = nullptr;
+  QLineEdit *syn_edit = nullptr;
 };
 
 class Component : public Widgets::Component {
 public:
   explicit Component(Widgets::Plugin *hplugin);
   void execute() override;
-
   // Additional functionality needed for RealTime computation is to be placed
   // here
-private:
-  double vars_model[3];
+  static Component *instance;
+
   double params_model[10];
+  double vars_model[3];
+  double s_points;
+
+private:
   double period, freq;
   double burst_duration, burst_duration_value;
-  double s_points;
 
   void initParameters();
   double set_pts_burst(double sec_per_burst);
