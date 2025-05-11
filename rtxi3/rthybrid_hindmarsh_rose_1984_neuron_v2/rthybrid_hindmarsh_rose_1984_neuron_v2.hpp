@@ -26,7 +26,7 @@ namespace RTHybridHindmarshRose1984NeuronV2 {
 constexpr std::string_view MODULE_NAME =
     "RTHybrid Hindmarsh-Rose (1984) Neuron V2";
 
-enum VARIABLE : Widgets::Variable::Id {
+enum VARIABLE {
   NM_HINDMARSH_ROSE_1984_V = 0,
   NM_HINDMARSH_ROSE_1984_Y,
   NM_HINDMARSH_ROSE_1984_Z
@@ -52,7 +52,7 @@ enum VIEW_PARAMETER : Widgets::Variable::Id {
   V_NM_HINDMARSH_ROSE_1984_SYN,
 };
 
-enum ARRAY_PARAMETER {
+enum PARAMETER {
   NM_HINDMARSH_ROSE_1984_I = 0,
   NM_HINDMARSH_ROSE_1984_A,
   NM_HINDMARSH_ROSE_1984_B,
