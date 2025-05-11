@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.14)
 project(
     rthybrid_hindmarsh_rose_1984_neuron
     VERSION 0.1.0
-    DESCRIPTION "rthybrid_hindmarsh_rose_1984_neuron"
+    DESCRIPTION "RTHybrid Hindmarsh-Rose (1984) Neuron"
     HOMEPAGE_URL "https://rtxi.org/"
     LANGUAGES CXX
 )

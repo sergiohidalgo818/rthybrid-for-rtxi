@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.14)
 
 project(
-    rthybrid_amplitude_scale_offset
+    rthybrid_komendantov_kononenko_1996_neuron
     VERSION 0.1.0
-    DESCRIPTION "RTHybrid Amplitude Scale Offset"
+    DESCRIPTION "RTHybrid Komendantov-Kononenko (1996) Neuron"
     HOMEPAGE_URL "https://rtxi.org/"
     LANGUAGES CXX
 )
@@ -32,13 +32,13 @@ set(CMAKE_AUTOUIC ON)
 ### with linking and include errors!                                                            # 
 #################################################################################################
 add_library(
-    rthybrid_amplitude_scale_offset MODULE
-    rthybrid_amplitude_scale_offset.cpp
-    rthybrid_amplitude_scale_offset.hpp
+    rthybrid_komendantov_kononenko_1996_neuron MODULE
+    rthybrid_komendantov_kononenko_1996_neuron.cpp
+    rthybrid_komendantov_kononenko_1996_neuron.hpp
 )
 
 # Consult library website for how to link them to your plugin using cmake
-target_link_libraries(rthybrid_amplitude_scale_offset PUBLIC 
+target_link_libraries(rthybrid_komendantov_kononenko_1996_neuron PUBLIC 
     rtxi::rtxi rtxi::rtxidsp rtxi::rtxigen rtxi::rtxififo Qt5::Core Qt5::Gui Qt5::Widgets 
     dl fmt::fmt
 )
@@ -47,10 +47,10 @@ target_link_libraries(rthybrid_amplitude_scale_offset PUBLIC
 
 # We need to tell cmake to use the c++ version used to compile the dependent library or else...
 get_target_property(REQUIRED_COMPILE_FEATURE rtxi::rtxi INTERFACE_COMPILE_FEATURES)
-target_compile_features(rthybrid_amplitude_scale_offset PRIVATE ${REQUIRED_COMPILE_FEATURE})
+target_compile_features(rthybrid_komendantov_kononenko_1996_neuron PRIVATE ${REQUIRED_COMPILE_FEATURE})
 
 install(
-    TARGETS rthybrid_amplitude_scale_offset
+    TARGETS rthybrid_komendantov_kononenko_1996_neuron
     DESTINATION ${RTXI_PACKAGE_PATH}/bin/rtxi_modules
 )
 

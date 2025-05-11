@@ -1,23 +1,44 @@
+/*
+ * Copyright (C) 2011 Georgia Institute of Technology, University of Utah,
+ * Weill Cornell Medical College
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*
+ * This is a template implementation file for a user module,
+ */
 #include "rthybrid_burst_analysis.hpp"
 #include <QTimer>
 #include <rtxi/rt.hpp>
 #include <rtxi/rtos.hpp>
 
-rthybrid_burst_analysis::Component
-    *rthybrid_burst_analysis::Component::instance = nullptr;
+RTHybridBurstAnalysis::Component *RTHybridBurstAnalysis::Component::instance =
+    nullptr;
 
-rthybrid_burst_analysis::Plugin::Plugin(Event::Manager *ev_manager)
+RTHybridBurstAnalysis::Plugin::Plugin(Event::Manager *ev_manager)
     : Widgets::Plugin(ev_manager,
-                      std::string(rthybrid_burst_analysis::MODULE_NAME)) {}
+                      std::string(RTHybridBurstAnalysis::MODULE_NAME)) {}
 
-rthybrid_burst_analysis::Panel::Panel(QMainWindow *main_window,
-                                      Event::Manager *ev_manager)
-    : Widgets::Panel(std::string(rthybrid_burst_analysis::MODULE_NAME),
+RTHybridBurstAnalysis::Panel::Panel(QMainWindow *main_window,
+                                    Event::Manager *ev_manager)
+    : Widgets::Panel(std::string(RTHybridBurstAnalysis::MODULE_NAME),
                      main_window, ev_manager) {
   setWhatsThis("<p><b>RTHybridBurstAnalysis:</b><br>RTHybrid module for RTXI "
                "to get the minimum and maximum membrane potential values of a "
                "neuron and its bursts duration.</p>");
-  createGUI(rthybrid_burst_analysis::get_default_vars(),
+  createGUI(RTHybridBurstAnalysis::get_default_vars(),
             {}); // this is required to create the GUI
   auto edits = findChildren<QLineEdit *>();
   min_edit = edits[BURST_ANALYSIS_MIN];
@@ -51,21 +72,21 @@ rthybrid_burst_analysis::Panel::Panel(QMainWindow *main_window,
 
   QTimer *timer = new QTimer(this);
   connect(timer, &QTimer::timeout, this,
-          &rthybrid_burst_analysis::Panel::refresh);
+          &RTHybridBurstAnalysis::Panel::refresh);
   timer->start(500); // refresh every 500 ms
 
   this->parentWidget()->adjustSize();
 }
 
-rthybrid_burst_analysis::Component::Component(Widgets::Plugin *hplugin)
+RTHybridBurstAnalysis::Component::Component(Widgets::Plugin *hplugin)
     : Widgets::Component(hplugin,
-                         std::string(rthybrid_burst_analysis::MODULE_NAME),
-                         rthybrid_burst_analysis::get_default_channels(),
-                         rthybrid_burst_analysis::get_default_vars()) {
+                         std::string(RTHybridBurstAnalysis::MODULE_NAME),
+                         RTHybridBurstAnalysis::get_default_channels(),
+                         RTHybridBurstAnalysis::get_default_vars()) {
   Component::instance = this;
 }
-void rthybrid_burst_analysis::Panel::refresh() {
-  auto *comp = rthybrid_burst_analysis::Component::instance;
+void RTHybridBurstAnalysis::Panel::refresh() {
+  auto *comp = RTHybridBurstAnalysis::Component::instance;
   if (comp && min_edit) {
     min_edit->setText(QString::number(comp->min));
   }
@@ -95,7 +116,7 @@ void rthybrid_burst_analysis::Panel::refresh() {
   }
 }
 
-void rthybrid_burst_analysis::Component::initParameters(void) {
+void RTHybridBurstAnalysis::Component::initParameters(void) {
 
   min = getValue<double>(BURST_ANALYSIS_MIN);
   max = getValue<double>(BURST_ANALYSIS_MAX);
@@ -111,7 +132,7 @@ void rthybrid_burst_analysis::Component::initParameters(void) {
   old_burst_time = 0.0;
 }
 
-void rthybrid_burst_analysis::Component::execute() {
+void RTHybridBurstAnalysis::Component::execute() {
   // This is the real-time function that will be called
   switch (this->getState()) {
   case RT::State::EXEC:
@@ -194,17 +215,17 @@ void rthybrid_burst_analysis::Component::execute() {
 // a component to the real time thread for your plugin.
 
 std::unique_ptr<Widgets::Plugin> createRTXIPlugin(Event::Manager *ev_manager) {
-  return std::make_unique<rthybrid_burst_analysis::Plugin>(ev_manager);
+  return std::make_unique<RTHybridBurstAnalysis::Plugin>(ev_manager);
 }
 
 Widgets::Panel *createRTXIPanel(QMainWindow *main_window,
                                 Event::Manager *ev_manager) {
-  return new rthybrid_burst_analysis::Panel(main_window, ev_manager);
+  return new RTHybridBurstAnalysis::Panel(main_window, ev_manager);
 }
 
 std::unique_ptr<Widgets::Component>
 createRTXIComponent(Widgets::Plugin *host_plugin) {
-  return std::make_unique<rthybrid_burst_analysis::Component>(host_plugin);
+  return std::make_unique<RTHybridBurstAnalysis::Component>(host_plugin);
 }
 
 Widgets::FactoryMethods fact;

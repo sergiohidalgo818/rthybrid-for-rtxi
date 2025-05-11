@@ -22,9 +22,10 @@
 #include <rtxi/rt.hpp>
 #include <rtxi/widgets.hpp>
 
-namespace rthybrid_hindmarsh_rose_1984_neuron {
+namespace RTHybridHindmarshRose1984Neuron {
 
-constexpr std::string_view MODULE_NAME = "rthybrid_hindmarsh_rose_1984_neuron";
+constexpr std::string_view MODULE_NAME =
+    "RTHybrid Hindmarsh-Rose (1984) Neuron";
 
 enum VARIABLE : Widgets::Variable::Id {
   NM_HINDMARSH_ROSE_1984_V = 0,
@@ -154,4 +155,4 @@ public:
   explicit Plugin(Event::Manager *ev_manager);
 };
 
-} // namespace rthybrid_hindmarsh_rose_1984_neuron
+} // namespace RTHybridHindmarshRose1984Neuron

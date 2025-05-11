@@ -26,21 +26,20 @@
 #include <rtxi/rt.hpp>
 #include <rtxi/rtos.hpp>
 
-rthybrid_hindmarsh_rose_1984_neuron::Component
-    *rthybrid_hindmarsh_rose_1984_neuron::Component::instance = nullptr;
+RTHybridHindmarshRose1984Neuron::Component
+    *RTHybridHindmarshRose1984Neuron::Component::instance = nullptr;
 
-rthybrid_hindmarsh_rose_1984_neuron::Plugin::Plugin(Event::Manager *ev_manager)
+RTHybridHindmarshRose1984Neuron::Plugin::Plugin(Event::Manager *ev_manager)
     : Widgets::Plugin(
           ev_manager,
-          std::string(rthybrid_hindmarsh_rose_1984_neuron::MODULE_NAME)) {}
+          std::string(RTHybridHindmarshRose1984Neuron::MODULE_NAME)) {}
 
-rthybrid_hindmarsh_rose_1984_neuron::Panel::Panel(QMainWindow *main_window,
-                                                  Event::Manager *ev_manager)
-    : Widgets::Panel(
-          std::string(rthybrid_hindmarsh_rose_1984_neuron::MODULE_NAME),
-          main_window, ev_manager) {
+RTHybridHindmarshRose1984Neuron::Panel::Panel(QMainWindow *main_window,
+                                              Event::Manager *ev_manager)
+    : Widgets::Panel(std::string(RTHybridHindmarshRose1984Neuron::MODULE_NAME),
+                     main_window, ev_manager) {
   setWhatsThis("<p><b>RTHybrid Hindmarsh-Rose (1984) neuron model</b></p>");
-  createGUI(rthybrid_hindmarsh_rose_1984_neuron::get_default_vars(),
+  createGUI(RTHybridHindmarshRose1984Neuron::get_default_vars(),
             {}); // this is required to create the GUI
   auto edits = findChildren<QLineEdit *>();
   v_edit = edits[V_NM_HINDMARSH_ROSE_1984_V];
@@ -58,24 +57,22 @@ rthybrid_hindmarsh_rose_1984_neuron::Panel::Panel(QMainWindow *main_window,
 
   QTimer *timer = new QTimer(this);
   connect(timer, &QTimer::timeout, this,
-          &rthybrid_hindmarsh_rose_1984_neuron::Panel::refresh);
+          &RTHybridHindmarshRose1984Neuron::Panel::refresh);
   timer->start(500); // refresh every 500 ms
   this->parentWidget()->adjustSize();
 }
 
-rthybrid_hindmarsh_rose_1984_neuron::Component::Component(
-    Widgets::Plugin *hplugin)
+RTHybridHindmarshRose1984Neuron::Component::Component(Widgets::Plugin *hplugin)
     : Widgets::Component(
-          hplugin,
-          std::string(rthybrid_hindmarsh_rose_1984_neuron::MODULE_NAME),
-          rthybrid_hindmarsh_rose_1984_neuron::get_default_channels(),
-          rthybrid_hindmarsh_rose_1984_neuron::get_default_vars()) {
+          hplugin, std::string(RTHybridHindmarshRose1984Neuron::MODULE_NAME),
+          RTHybridHindmarshRose1984Neuron::get_default_channels(),
+          RTHybridHindmarshRose1984Neuron::get_default_vars()) {
 
   Component::instance = this;
 }
 
-void rthybrid_hindmarsh_rose_1984_neuron::Panel::refresh() {
-  auto *comp = rthybrid_hindmarsh_rose_1984_neuron::Component::instance;
+void RTHybridHindmarshRose1984Neuron::Panel::refresh() {
+  auto *comp = RTHybridHindmarshRose1984Neuron::Component::instance;
   if (comp && v_edit) {
     v_edit->setText(
         QString::number(comp->vars_model[NM_HINDMARSH_ROSE_1984_V]));
@@ -93,7 +90,7 @@ void rthybrid_hindmarsh_rose_1984_neuron::Panel::refresh() {
   }
 }
 
-void rthybrid_hindmarsh_rose_1984_neuron::Component::execute() {
+void RTHybridHindmarshRose1984Neuron::Component::execute() {
   // This is the real-time function that will be called
 
   switch (this->getState()) {
@@ -195,7 +192,7 @@ void rthybrid_hindmarsh_rose_1984_neuron::Component::execute() {
   }
 }
 
-void rthybrid_hindmarsh_rose_1984_neuron::Component::initParameters(void) {
+void RTHybridHindmarshRose1984Neuron::Component::initParameters(void) {
   burst_duration_value = getValue<double>(V_NM_HINDMARSH_ROSE_1984_BD);
   burst_duration = burst_duration_value;
   freq = 1.0 / (period * 1e-3);
@@ -238,7 +235,7 @@ void rthybrid_hindmarsh_rose_1984_neuron::Component::initParameters(void) {
  * @param[in] syn Synapse input current value
  */
 
-void rthybrid_hindmarsh_rose_1984_neuron::Component::nm_hindmarsh_rose_1984_f(
+void RTHybridHindmarshRose1984Neuron::Component::nm_hindmarsh_rose_1984_f(
     double *vars, double *ret, double *params, double syn) {
   params[NM_HINDMARSH_ROSE_1984_SYN] = syn;
 
@@ -247,7 +244,7 @@ void rthybrid_hindmarsh_rose_1984_neuron::Component::nm_hindmarsh_rose_1984_f(
   ret[NM_HINDMARSH_ROSE_1984_Z] = nm_hindmarsh_rose_1984_z(vars, params);
 }
 
-double rthybrid_hindmarsh_rose_1984_neuron::Component::nm_hindmarsh_rose_1984_v(
+double RTHybridHindmarshRose1984Neuron::Component::nm_hindmarsh_rose_1984_v(
     double *vars, double *params) {
   return vars[NM_HINDMARSH_ROSE_1984_Y] +
          params[NM_HINDMARSH_ROSE_1984_B] *
@@ -259,7 +256,7 @@ double rthybrid_hindmarsh_rose_1984_neuron::Component::nm_hindmarsh_rose_1984_v(
          params[NM_HINDMARSH_ROSE_1984_SYN];
 }
 
-double rthybrid_hindmarsh_rose_1984_neuron::Component::nm_hindmarsh_rose_1984_y(
+double RTHybridHindmarshRose1984Neuron::Component::nm_hindmarsh_rose_1984_y(
     double *vars, double *params) {
   return params[NM_HINDMARSH_ROSE_1984_C] -
          params[NM_HINDMARSH_ROSE_1984_D] * vars[NM_HINDMARSH_ROSE_1984_V] *
@@ -267,7 +264,7 @@ double rthybrid_hindmarsh_rose_1984_neuron::Component::nm_hindmarsh_rose_1984_y(
          vars[NM_HINDMARSH_ROSE_1984_Y];
 }
 
-double rthybrid_hindmarsh_rose_1984_neuron::Component::nm_hindmarsh_rose_1984_z(
+double RTHybridHindmarshRose1984Neuron::Component::nm_hindmarsh_rose_1984_z(
     double *vars, double *params) {
   return params[NM_HINDMARSH_ROSE_1984_R] *
          (params[NM_HINDMARSH_ROSE_1984_S] *
@@ -276,7 +273,7 @@ double rthybrid_hindmarsh_rose_1984_neuron::Component::nm_hindmarsh_rose_1984_z(
           vars[NM_HINDMARSH_ROSE_1984_Z]);
 }
 
-double rthybrid_hindmarsh_rose_1984_neuron::Component::set_pts_burst(
+double RTHybridHindmarshRose1984Neuron::Component::set_pts_burst(
     double sec_per_burst) {
   int length = 0;
   int method = 3;
@@ -343,7 +340,7 @@ double rthybrid_hindmarsh_rose_1984_neuron::Component::set_pts_burst(
   return pts_burst;
 }
 
-void rthybrid_hindmarsh_rose_1984_neuron::Component::select_dt_neuron_model(
+void RTHybridHindmarshRose1984Neuron::Component::select_dt_neuron_model(
     double *dts, double *pts, unsigned int length, double pts_live, double *dt,
     double *pts_burst) {
   double aux = pts_live;
@@ -391,7 +388,7 @@ void rthybrid_hindmarsh_rose_1984_neuron::Component::select_dt_neuron_model(
   return;
 }
 
-void rthybrid_hindmarsh_rose_1984_neuron::Component::runge_kutta_65(
+void RTHybridHindmarshRose1984Neuron::Component::runge_kutta_65(
     void (*f)(double *, double *, double *, double), int dim, double dt,
     double *vars, double *params, double aux) {
   double apoyo[dim], retorno[dim];
@@ -455,19 +452,17 @@ void rthybrid_hindmarsh_rose_1984_neuron::Component::runge_kutta_65(
 // real time thread for your plugin.
 
 std::unique_ptr<Widgets::Plugin> createRTXIPlugin(Event::Manager *ev_manager) {
-  return std::make_unique<rthybrid_hindmarsh_rose_1984_neuron::Plugin>(
-      ev_manager);
+  return std::make_unique<RTHybridHindmarshRose1984Neuron::Plugin>(ev_manager);
 }
 
 Widgets::Panel *createRTXIPanel(QMainWindow *main_window,
                                 Event::Manager *ev_manager) {
-  return new rthybrid_hindmarsh_rose_1984_neuron::Panel(main_window,
-                                                        ev_manager);
+  return new RTHybridHindmarshRose1984Neuron::Panel(main_window, ev_manager);
 }
 
 std::unique_ptr<Widgets::Component>
 createRTXIComponent(Widgets::Plugin *host_plugin) {
-  return std::make_unique<rthybrid_hindmarsh_rose_1984_neuron::Component>(
+  return std::make_unique<RTHybridHindmarshRose1984Neuron::Component>(
       host_plugin);
 }
 

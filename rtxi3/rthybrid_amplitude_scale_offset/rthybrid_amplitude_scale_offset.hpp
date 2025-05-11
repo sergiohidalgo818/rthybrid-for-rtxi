@@ -1,17 +1,37 @@
+/*
+ * Copyright (C) 2011 Georgia Institute of Technology, University of Utah,
+ * Weill Cornell Medical College
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*
+ * This is a template implementation file for a user module,
+ */
 
 #include <rtxi/widgets.hpp>
 
-namespace rthybrid_amplitude_scale_offset {
+namespace RTHybridAmplitudeScaleOffset {
 
-constexpr std::string_view MODULE_NAME = "rthybrid_amplitude_scale_offset";
+constexpr std::string_view MODULE_NAME = "RTHybrid Amplitude Scale Offset";
 
 enum PARAMETER : Widgets::Variable::Id {
   // set parameter ids here
-
   V_S12 = 0,
-  V_S21 = 1,
-  V_O12 = 2,
-  V_O21 = 3
+  V_S21,
+  V_O12,
+  V_O21
 };
 
 inline std::vector<Widgets::Variable::Info> get_default_vars() {
@@ -102,4 +122,4 @@ public:
   explicit Plugin(Event::Manager *ev_manager);
 };
 
-} // namespace rthybrid_amplitude_scale_offset
+} // namespace RTHybridAmplitudeScaleOffset

@@ -1,20 +1,40 @@
+/*
+ * Copyright (C) 2011 Georgia Institute of Technology, University of Utah,
+ * Weill Cornell Medical College
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*
+ * This is a template implementation file for a user module,
+ */
 #include "rthybrid_amplitude_scale_offset.hpp"
 #include <QTimer>
 #include <cstdio>
 #include <rtxi/rt.hpp>
 #include <rtxi/rtos.hpp>
 
-rthybrid_amplitude_scale_offset::Component
-    *rthybrid_amplitude_scale_offset::Component::instance = nullptr;
+RTHybridAmplitudeScaleOffset::Component
+    *RTHybridAmplitudeScaleOffset::Component::instance = nullptr;
 
-rthybrid_amplitude_scale_offset::Plugin::Plugin(Event::Manager *ev_manager)
-    : Widgets::Plugin(
-          ev_manager,
-          std::string(rthybrid_amplitude_scale_offset::MODULE_NAME)) {}
+RTHybridAmplitudeScaleOffset::Plugin::Plugin(Event::Manager *ev_manager)
+    : Widgets::Plugin(ev_manager,
+                      std::string(RTHybridAmplitudeScaleOffset::MODULE_NAME)) {}
 
-rthybrid_amplitude_scale_offset::Panel::Panel(QMainWindow *main_window,
-                                              Event::Manager *ev_manager)
-    : Widgets::Panel(std::string(rthybrid_amplitude_scale_offset::MODULE_NAME),
+RTHybridAmplitudeScaleOffset::Panel::Panel(QMainWindow *main_window,
+                                           Event::Manager *ev_manager)
+    : Widgets::Panel(std::string(RTHybridAmplitudeScaleOffset::MODULE_NAME),
                      main_window, ev_manager) {
   setWhatsThis(
       "<p><b>RTHybrid Amplitude Scale Offset:</b><br>Given two neurons "
@@ -23,7 +43,7 @@ rthybrid_amplitude_scale_offset::Panel::Panel(QMainWindow *main_window,
       "i.e. if Neuron 1 membrane potential is multiplied by Scale 1-2 and "
       "added Offset 1-2, the result will be in the same amplitude range than "
       "Neuron 2 membrane potential, and viceversa.</p>");
-  createGUI(rthybrid_amplitude_scale_offset::get_default_vars(),
+  createGUI(RTHybridAmplitudeScaleOffset::get_default_vars(),
             {}); // this is required to create the GUI
 
   auto edits = findChildren<QLineEdit *>();
@@ -43,21 +63,21 @@ rthybrid_amplitude_scale_offset::Panel::Panel(QMainWindow *main_window,
 
   QTimer *timer = new QTimer(this);
   connect(timer, &QTimer::timeout, this,
-          &rthybrid_amplitude_scale_offset::Panel::refresh);
+          &RTHybridAmplitudeScaleOffset::Panel::refresh);
   timer->start(500); // refresh every 500 ms
   this->parentWidget()->adjustSize();
 }
 
-rthybrid_amplitude_scale_offset::Component::Component(Widgets::Plugin *hplugin)
-    : Widgets::Component(
-          hplugin, std::string(rthybrid_amplitude_scale_offset::MODULE_NAME),
-          rthybrid_amplitude_scale_offset::get_default_channels(),
-          rthybrid_amplitude_scale_offset::get_default_vars()) {
+RTHybridAmplitudeScaleOffset::Component::Component(Widgets::Plugin *hplugin)
+    : Widgets::Component(hplugin,
+                         std::string(RTHybridAmplitudeScaleOffset::MODULE_NAME),
+                         RTHybridAmplitudeScaleOffset::get_default_channels(),
+                         RTHybridAmplitudeScaleOffset::get_default_vars()) {
   Component::instance = this;
 }
 
-void rthybrid_amplitude_scale_offset::Panel::refresh() {
-  auto *comp = rthybrid_amplitude_scale_offset::Component::instance;
+void RTHybridAmplitudeScaleOffset::Panel::refresh() {
+  auto *comp = RTHybridAmplitudeScaleOffset::Component::instance;
   if (comp && s12_edit) {
     s12_edit->setText(QString::number(comp->s12));
   }
@@ -72,7 +92,7 @@ void rthybrid_amplitude_scale_offset::Panel::refresh() {
   }
 }
 
-void rthybrid_amplitude_scale_offset::Component::execute() {
+void RTHybridAmplitudeScaleOffset::Component::execute() {
   // This is the real-time function that will be called
   switch (this->getState()) {
   case RT::State::EXEC:
@@ -129,7 +149,7 @@ void rthybrid_amplitude_scale_offset::Component::execute() {
   }
 }
 
-void rthybrid_amplitude_scale_offset::Component::initParameters() {
+void RTHybridAmplitudeScaleOffset::Component::initParameters() {
   s12 = getValue<double>(V_S12);
   s21 = getValue<double>(V_S21);
   o12 = getValue<double>(V_O12);
@@ -143,18 +163,17 @@ void rthybrid_amplitude_scale_offset::Component::initParameters() {
 // real time thread for your plugin.
 
 std::unique_ptr<Widgets::Plugin> createRTXIPlugin(Event::Manager *ev_manager) {
-  return std::make_unique<rthybrid_amplitude_scale_offset::Plugin>(ev_manager);
+  return std::make_unique<RTHybridAmplitudeScaleOffset::Plugin>(ev_manager);
 }
 
 Widgets::Panel *createRTXIPanel(QMainWindow *main_window,
                                 Event::Manager *ev_manager) {
-  return new rthybrid_amplitude_scale_offset::Panel(main_window, ev_manager);
+  return new RTHybridAmplitudeScaleOffset::Panel(main_window, ev_manager);
 }
 
 std::unique_ptr<Widgets::Component>
 createRTXIComponent(Widgets::Plugin *host_plugin) {
-  return std::make_unique<rthybrid_amplitude_scale_offset::Component>(
-      host_plugin);
+  return std::make_unique<RTHybridAmplitudeScaleOffset::Component>(host_plugin);
 }
 
 Widgets::FactoryMethods fact;
