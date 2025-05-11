@@ -31,16 +31,25 @@ enum PARAMETER : Widgets::Variable::Id {
   ELECTRICAL_SYNAPSE_G = 0,
   ELECTRICAL_SYNAPSE_CURRENT,
   ELECTRICAL_SYNAPSE_OFFSET,
+  ELECTRICAL_SYNAPSE_SCALE,
+};
+
+enum CONDUCTANCE_VARIABLE {
+
+  SM_ELECTRICAL_N_G = 0,
+  SM_ELECTRICAL_G,
 };
 
 inline std::vector<Widgets::Variable::Info> get_default_vars() {
   return {
 
       {ELECTRICAL_SYNAPSE_G, "g (uS)", "Conductance (uS)",
-       Widgets::Variable::DOUBLE_PARAMETER, 0.0},
+       Widgets::Variable::DOUBLE_PARAMETER, -0.2},
       {ELECTRICAL_SYNAPSE_CURRENT, "Current (nA)", "",
        Widgets::Variable::DOUBLE_PARAMETER, 0.0},
       {ELECTRICAL_SYNAPSE_OFFSET, "Offset", "",
+       Widgets::Variable::DOUBLE_PARAMETER, 0.0},
+      {ELECTRICAL_SYNAPSE_SCALE, "Scale", "",
        Widgets::Variable::DOUBLE_PARAMETER, 0.0},
   };
 }
@@ -67,15 +76,28 @@ public:
   Panel(QMainWindow *main_window, Event::Manager *ev_manager);
 
   // Any functions and data related to the GUI are to be placed here
+  void refresh();
+  QLineEdit *current_edit = nullptr;
+  QLineEdit *offset_edit = nullptr;
+  QLineEdit *scale_edit = nullptr;
 };
 
 class Component : public Widgets::Component {
 public:
   explicit Component(Widgets::Plugin *hplugin);
   void execute() override;
-
   // Additional functionality needed for RealTime computation is to be placed
   // here
+  static Component *instance;
+  double i, offset, scale;
+
+private:
+  double period;
+
+  double g[1];
+
+  void initParameters();
+  void sm_electrical(double v_post, double v_pre, double *ret);
 };
 
 class Plugin : public Widgets::Plugin {
