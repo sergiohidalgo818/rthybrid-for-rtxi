@@ -47,19 +47,38 @@ RTHybridAmplitudeScaleOffset::Panel::Panel(QMainWindow *main_window,
             {}); // this is required to create the GUI
 
   auto edits = findChildren<QLineEdit *>();
+  QString readonlyStyle = R"(
+    QLineEdit {
+    background-color: #e0e0e0;
+    color: #666666;
+    border: 1px solid #cccccc;
+    }
+    QLineEdit:focus {
+    border: 1px solid #cccccc;
+    outline: none;
+    }
+  )";
+
   s12_edit = edits[V_S12];
   s21_edit = edits[V_S21];
   o12_edit = edits[V_O12];
   o21_edit = edits[V_O21];
-
-  if (s12_edit)
+  if (s12_edit) {
     s12_edit->setReadOnly(true);
-  if (s21_edit)
+    s12_edit->setStyleSheet(readonlyStyle);
+  }
+  if (s21_edit) {
     s21_edit->setReadOnly(true);
-  if (o12_edit)
+    s21_edit->setStyleSheet(readonlyStyle);
+  }
+  if (o12_edit) {
     o12_edit->setReadOnly(true);
-  if (o21_edit)
+    o12_edit->setStyleSheet(readonlyStyle);
+  }
+  if (o21_edit) {
     o21_edit->setReadOnly(true);
+    o21_edit->setStyleSheet(readonlyStyle);
+  }
 
   QTimer *timer = new QTimer(this);
   connect(timer, &QTimer::timeout, this,

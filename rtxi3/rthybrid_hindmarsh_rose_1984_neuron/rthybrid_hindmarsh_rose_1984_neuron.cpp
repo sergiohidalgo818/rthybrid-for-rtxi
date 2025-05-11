@@ -42,18 +42,39 @@ RTHybridHindmarshRose1984Neuron::Panel::Panel(QMainWindow *main_window,
   createGUI(RTHybridHindmarshRose1984Neuron::get_default_vars(),
             {}); // this is required to create the GUI
   auto edits = findChildren<QLineEdit *>();
+  QString readonlyStyle = R"(
+    QLineEdit {
+    background-color: #e0e0e0;
+    color: #666666;
+    border: 1px solid #cccccc;
+    }
+    QLineEdit:focus {
+    border: 1px solid #cccccc;
+    outline: none;
+    }
+  )";
+
   v_edit = edits[V_NM_HINDMARSH_ROSE_1984_V];
   sp_edit = edits[V_NM_HINDMARSH_ROSE_1984_SP];
   dt_edit = edits[V_NM_HINDMARSH_ROSE_1984_DT];
   syn_edit = edits[V_NM_HINDMARSH_ROSE_1984_SYN];
-  if (v_edit)
+
+  if (v_edit) {
     v_edit->setReadOnly(true);
-  if (sp_edit)
+    v_edit->setStyleSheet(readonlyStyle);
+  }
+  if (sp_edit) {
     sp_edit->setReadOnly(true);
-  if (dt_edit)
+    sp_edit->setStyleSheet(readonlyStyle);
+  }
+  if (dt_edit) {
     dt_edit->setReadOnly(true);
-  if (syn_edit)
+    dt_edit->setStyleSheet(readonlyStyle);
+  }
+  if (syn_edit) {
     syn_edit->setReadOnly(true);
+    syn_edit->setStyleSheet(readonlyStyle);
+  }
 
   QTimer *timer = new QTimer(this);
   connect(timer, &QTimer::timeout, this,

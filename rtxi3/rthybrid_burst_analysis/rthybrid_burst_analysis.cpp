@@ -41,6 +41,18 @@ RTHybridBurstAnalysis::Panel::Panel(QMainWindow *main_window,
   createGUI(RTHybridBurstAnalysis::get_default_vars(),
             {}); // this is required to create the GUI
   auto edits = findChildren<QLineEdit *>();
+  QString readonlyStyle = R"(
+    QLineEdit {
+    background-color: #e0e0e0;
+    color: #666666;
+    border: 1px solid #cccccc;
+    }
+    QLineEdit:focus {
+    border: 1px solid #cccccc;
+    outline: none;
+    }
+  )";
+
   min_edit = edits[BURST_ANALYSIS_MIN];
   max_edit = edits[BURST_ANALYSIS_MAX];
   dur_edit = edits[BURST_ANALYSIS_DUR];
@@ -51,24 +63,42 @@ RTHybridBurstAnalysis::Panel::Panel(QMainWindow *main_window,
   bc_edit = edits[BURST_ANALYSIS_BC];
   isb_edit = edits[BURST_ANALYSIS_ISB];
 
-  if (min_edit)
+  if (min_edit) {
     min_edit->setReadOnly(true);
-  if (max_edit)
+    min_edit->setStyleSheet(readonlyStyle);
+  }
+  if (max_edit) {
     max_edit->setReadOnly(true);
-  if (dur_edit)
+    max_edit->setStyleSheet(readonlyStyle);
+  }
+  if (dur_edit) {
     dur_edit->setReadOnly(true);
-  if (upp_thresh_edit)
+    dur_edit->setStyleSheet(readonlyStyle);
+  }
+  if (upp_thresh_edit) {
     upp_thresh_edit->setReadOnly(true);
-  if (down_thresh_edit)
+    upp_thresh_edit->setStyleSheet(readonlyStyle);
+  }
+  if (down_thresh_edit) {
     down_thresh_edit->setReadOnly(true);
-  if (ampl_edit)
+    down_thresh_edit->setStyleSheet(readonlyStyle);
+  }
+  if (ampl_edit) {
     ampl_edit->setReadOnly(true);
-  if (isb_edit)
+    ampl_edit->setStyleSheet(readonlyStyle);
+  }
+  if (isb_edit) {
     isb_edit->setReadOnly(true);
-  if (pc_edit)
+    isb_edit->setStyleSheet(readonlyStyle);
+  }
+  if (pc_edit) {
     pc_edit->setReadOnly(true);
-  if (bc_edit)
+    pc_edit->setStyleSheet(readonlyStyle);
+  }
+  if (bc_edit) {
     bc_edit->setReadOnly(true);
+    bc_edit->setStyleSheet(readonlyStyle);
+  }
 
   QTimer *timer = new QTimer(this);
   connect(timer, &QTimer::timeout, this,

@@ -32,6 +32,18 @@ RTHybridElectricalSynapse::Panel::Panel(QMainWindow *main_window,
   setWhatsThis("Template Plugin");
   createGUI(RTHybridElectricalSynapse::get_default_vars(),
             {}); // this is required to create the GUI
+  QString readonlyStyle = R"(
+    QLineEdit {
+    background-color: #e0e0e0;
+    color: #666666;
+    border: 1px solid #cccccc;
+    }
+    QLineEdit:focus {
+    border: 1px solid #cccccc;
+    outline: none;
+    }
+  )";
+
   this->parentWidget()->adjustSize();
 }
 
