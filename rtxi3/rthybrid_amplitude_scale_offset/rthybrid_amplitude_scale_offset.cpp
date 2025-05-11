@@ -59,10 +59,10 @@ RTHybridAmplitudeScaleOffset::Panel::Panel(QMainWindow *main_window,
     }
   )";
 
-  s12_edit = edits[V_S12];
-  s21_edit = edits[V_S21];
-  o12_edit = edits[V_O12];
-  o21_edit = edits[V_O21];
+  s12_edit = edits[AMPLITUDE_SCALE_S12];
+  s21_edit = edits[AMPLITUDE_SCALE_S21];
+  o12_edit = edits[AMPLITUDE_SCALE_O12];
+  o21_edit = edits[AMPLITUDE_SCALE_O21];
   if (s12_edit) {
     s12_edit->setReadOnly(true);
     s12_edit->setStyleSheet(readonlyStyle);
@@ -169,10 +169,10 @@ void RTHybridAmplitudeScaleOffset::Component::execute() {
 }
 
 void RTHybridAmplitudeScaleOffset::Component::initParameters() {
-  s12 = getValue<double>(V_S12);
-  s21 = getValue<double>(V_S21);
-  o12 = getValue<double>(V_O12);
-  o21 = getValue<double>(V_O21);
+  s12 = getValue<double>(AMPLITUDE_SCALE_S12);
+  s21 = getValue<double>(AMPLITUDE_SCALE_S21);
+  o12 = getValue<double>(AMPLITUDE_SCALE_O12);
+  o21 = getValue<double>(AMPLITUDE_SCALE_O21);
 }
 
 ///////// DO NOT MODIFY BELOW //////////

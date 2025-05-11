@@ -28,21 +28,22 @@ constexpr std::string_view MODULE_NAME = "RTHybrid Amplitude Scale Offset";
 
 enum PARAMETER : Widgets::Variable::Id {
   // set parameter ids here
-  V_S12 = 0,
-  V_O12,
-  V_S21,
-  V_O21
+  AMPLITUDE_SCALE_S12 = 0,
+  AMPLITUDE_SCALE_O12,
+  AMPLITUDE_SCALE_S21,
+  AMPLITUDE_SCALE_O21
 };
 
 inline std::vector<Widgets::Variable::Info> get_default_vars() {
-  return {{V_S12, "Scale 1-2", "Scale from neuron 1 to neuron 2",
-           Widgets::Variable::DOUBLE_PARAMETER, 1.0},
-          {V_O12, "Offset 1-2", "Offset from neuron 1 to neuron 2",
-           Widgets::Variable::DOUBLE_PARAMETER, 0.0},
-          {V_S21, "Scale 2-1", "Scale from neuron 2 to neuron 1",
-           Widgets::Variable::DOUBLE_PARAMETER, 1.0},
-          {V_O21, "Offset 2-1", "Offset from neuron 2 to neuron 1",
-           Widgets::Variable::DOUBLE_PARAMETER, 0.0}};
+  return {
+      {AMPLITUDE_SCALE_S12, "Scale 1-2", "Scale from neuron 1 to neuron 2",
+       Widgets::Variable::DOUBLE_PARAMETER, 1.0},
+      {AMPLITUDE_SCALE_O12, "Offset 1-2", "Offset from neuron 1 to neuron 2",
+       Widgets::Variable::DOUBLE_PARAMETER, 0.0},
+      {AMPLITUDE_SCALE_S21, "Scale 2-1", "Scale from neuron 2 to neuron 1",
+       Widgets::Variable::DOUBLE_PARAMETER, 1.0},
+      {AMPLITUDE_SCALE_O21, "Offset 2-1", "Offset from neuron 2 to neuron 1",
+       Widgets::Variable::DOUBLE_PARAMETER, 0.0}};
 }
 
 inline std::vector<IO::channel_t> get_default_channels() {

@@ -19,6 +19,7 @@
 /*
  * This is a template implementation file for a user module,
  */
+#include <rtxi/io.hpp>
 #include <rtxi/widgets.hpp>
 
 namespace RTHybridElectricalSynapse {
@@ -27,28 +28,37 @@ constexpr std::string_view MODULE_NAME = "RTHybrid Electrical Synapse";
 
 enum PARAMETER : Widgets::Variable::Id {
   // set parameter ids here
-  FIRST_PARAMETER = 0,
-  SECOND_PARAMETER,
-  THIRD_PARAMETER
+  ELECTRICAL_SYNAPSE_G = 0,
+  ELECTRICAL_SYNAPSE_CURRENT,
+  ELECTRICAL_SYNAPSE_OFFSET,
 };
 
 inline std::vector<Widgets::Variable::Info> get_default_vars() {
-  return {{PARAMETER::FIRST_PARAMETER, "First Parameter Name",
-           "First Parameter Description", Widgets::Variable::INT_PARAMETER,
-           int64_t{0}},
-          {PARAMETER::SECOND_PARAMETER, "Second Parameter Name",
-           "Second Parameter Description", Widgets::Variable::DOUBLE_PARAMETER,
-           1.0},
-          {PARAMETER::THIRD_PARAMETER, "Third Parameter Name",
-           "Third Parameter Description", Widgets::Variable::STATE,
-           uint64_t{1}}};
+  return {
+
+      {ELECTRICAL_SYNAPSE_G, "g (uS)", "Conductance (uS)",
+       Widgets::Variable::DOUBLE_PARAMETER, 0.0},
+      {ELECTRICAL_SYNAPSE_CURRENT, "Current (nA)", "",
+       Widgets::Variable::DOUBLE_PARAMETER, 0.0},
+      {ELECTRICAL_SYNAPSE_OFFSET, "Offset", "",
+       Widgets::Variable::DOUBLE_PARAMETER, 0.0},
+  };
 }
 
 inline std::vector<IO::channel_t> get_default_channels() {
-  return {{"First Channel Output Name", "First Channel Output Description",
-           IO::OUTPUT},
-          {"First Channel Input Name", "First Channel Input Description",
-           IO::INPUT}};
+  return {
+      {"Current (nA)", "Synaptic current (in nA)", IO::OUTPUT},
+      {"Post-synaptic Voltage (V)", "", IO::INPUT},
+      {"Pre-synaptic Voltage (V)", "", IO::INPUT},
+      {"Scale (Pre to Post)",
+       "Scale from the pre-synaptic neuron to the post-synaptic one, as given "
+       "by the RTHybridAmplitudeScale module.",
+       IO::INPUT},
+      {"Offset (Pre to Post)",
+       "Offset from the pre-synaptic neuron to the post-synaptic one, as given "
+       "by the RTHybridAmplitudeScale module.",
+       IO::INPUT},
+  };
 }
 
 class Panel : public Widgets::Panel {
