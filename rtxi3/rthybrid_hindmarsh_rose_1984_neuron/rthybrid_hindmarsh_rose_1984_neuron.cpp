@@ -111,108 +111,6 @@ void RTHybridHindmarshRose1984Neuron::Panel::refresh() {
   }
 }
 
-void RTHybridHindmarshRose1984Neuron::Component::execute() {
-  // This is the real-time function that will be called
-
-  switch (this->getState()) {
-  case RT::State::EXEC:
-    int i;
-
-    if (burst_duration_value <= -1) {
-      burst_duration = readinput(1);
-      s_points = (int)(set_pts_burst(burst_duration) / (burst_duration * freq));
-      if (s_points < 1)
-        s_points = 1;
-    }
-
-    for (i = 0; i < s_points; i++) {
-      runge_kutta_65(nm_hindmarsh_rose_1984_f, 3,
-                     params_model[NM_HINDMARSH_ROSE_1984_DT], vars_model,
-                     params_model, readinput(0));
-    }
-
-    writeoutput(0, vars_model[NM_HINDMARSH_ROSE_1984_V] / 1000.0);
-    writeoutput(1, vars_model[NM_HINDMARSH_ROSE_1984_V]);
-
-    break;
-  case RT::State::INIT:
-    period = RT::OS::getPeriod() * 1e-6; // ms
-    freq = 1.0 / (period * 1e-3);
-
-    this->initParameters();
-    setState(RT::State::EXEC);
-
-    break;
-  case RT::State::MODIFY:
-    burst_duration_value = getValue<double>(V_NM_HINDMARSH_ROSE_1984_BD);
-    freq = 1.0 / (period * 1e-3);
-
-    if (burst_duration_value <= -1) {
-      burst_duration = readinput(1);
-    } else {
-      burst_duration = burst_duration_value;
-    }
-
-    s_points = (int)(set_pts_burst(burst_duration) / (burst_duration * freq));
-    if (s_points < 1)
-      s_points = 1;
-
-    params_model[NM_HINDMARSH_ROSE_1984_A] =
-        getValue<double>(V_NM_HINDMARSH_ROSE_1984_A);
-    params_model[NM_HINDMARSH_ROSE_1984_B] =
-        getValue<double>(V_NM_HINDMARSH_ROSE_1984_B);
-    params_model[NM_HINDMARSH_ROSE_1984_C] =
-        getValue<double>(V_NM_HINDMARSH_ROSE_1984_C);
-
-    params_model[NM_HINDMARSH_ROSE_1984_R] =
-        getValue<double>(V_NM_HINDMARSH_ROSE_1984_R);
-    params_model[NM_HINDMARSH_ROSE_1984_S] =
-        getValue<double>(V_NM_HINDMARSH_ROSE_1984_S);
-    params_model[NM_HINDMARSH_ROSE_1984_XR] =
-        getValue<double>(V_NM_HINDMARSH_ROSE_1984_XR);
-
-    params_model[NM_HINDMARSH_ROSE_1984_I] =
-        getValue<double>(V_NM_HINDMARSH_ROSE_1984_I);
-
-    vars_model[VARIABLE::NM_HINDMARSH_ROSE_1984_V] =
-        getValue<double>(V_NM_HINDMARSH_ROSE_1984_V0);
-    vars_model[VARIABLE::NM_HINDMARSH_ROSE_1984_Y] =
-        getValue<double>(V_NM_HINDMARSH_ROSE_1984_Y0);
-    vars_model[VARIABLE::NM_HINDMARSH_ROSE_1984_Z] =
-        getValue<double>(V_NM_HINDMARSH_ROSE_1984_Z0);
-
-    setState(RT::State::PAUSE);
-    break;
-  case RT::State::PERIOD:
-    period = RT::OS::getPeriod() * 1e-6; // ms
-
-    freq = 1.0 / (period * 1e-3);
-    s_points = (int)(set_pts_burst(burst_duration) / (burst_duration * freq));
-    if (s_points == 0)
-      s_points = 1;
-
-    setState(RT::State::PAUSE);
-
-    break;
-  case RT::State::PAUSE:
-
-    writeoutput(0, 0);
-    writeoutput(1, 0);
-
-    break;
-  case RT::State::UNPAUSE:
-    freq = 1.0 / (period * 1e-3);
-    s_points = (int)(set_pts_burst(burst_duration) / (burst_duration * freq));
-    if (s_points == 0)
-      s_points = 1;
-    setState(RT::State::EXEC);
-
-    break;
-  default:
-    break;
-  }
-}
-
 void RTHybridHindmarshRose1984Neuron::Component::initParameters(void) {
   burst_duration_value = getValue<double>(V_NM_HINDMARSH_ROSE_1984_BD);
   burst_duration = burst_duration_value;
@@ -246,6 +144,75 @@ void RTHybridHindmarshRose1984Neuron::Component::initParameters(void) {
       getValue<double>(V_NM_HINDMARSH_ROSE_1984_C);
   params_model[NM_HINDMARSH_ROSE_1984_D] =
       getValue<double>(V_NM_HINDMARSH_ROSE_1984_D);
+}
+
+void RTHybridHindmarshRose1984Neuron::Component::execute() {
+  // This is the real-time function that will be called
+
+  switch (this->getState()) {
+  case RT::State::EXEC:
+    int i;
+
+    if (burst_duration_value <= -1) {
+      burst_duration = readinput(1);
+      s_points = (int)(set_pts_burst(burst_duration) / (burst_duration * freq));
+      if (s_points < 1)
+        s_points = 1;
+    }
+
+    for (i = 0; i < s_points; i++) {
+      runge_kutta_65(nm_hindmarsh_rose_1984_f, 3,
+                     params_model[NM_HINDMARSH_ROSE_1984_DT], vars_model,
+                     params_model, readinput(0));
+    }
+
+    writeoutput(0, vars_model[NM_HINDMARSH_ROSE_1984_V] / 1000.0);
+    writeoutput(1, vars_model[NM_HINDMARSH_ROSE_1984_V]);
+
+    break;
+  case RT::State::INIT:
+    period = RT::OS::getPeriod() * 1e-6; // ms
+    freq = 1.0 / (period * 1e-3);
+
+    this->initParameters();
+    setState(RT::State::EXEC);
+
+    break;
+  case RT::State::MODIFY:
+    period = RT::OS::getPeriod() * 1e-6; // ms
+    freq = 1.0 / (period * 1e-3);
+
+    this->initParameters();
+    setState(RT::State::PAUSE);
+    break;
+  case RT::State::PERIOD:
+    period = RT::OS::getPeriod() * 1e-6; // ms
+
+    freq = 1.0 / (period * 1e-3);
+    s_points = (int)(set_pts_burst(burst_duration) / (burst_duration * freq));
+    if (s_points == 0)
+      s_points = 1;
+
+    setState(RT::State::PAUSE);
+
+    break;
+  case RT::State::PAUSE:
+
+    writeoutput(0, 0);
+    writeoutput(1, 0);
+
+    break;
+  case RT::State::UNPAUSE:
+    freq = 1.0 / (period * 1e-3);
+    s_points = (int)(set_pts_burst(burst_duration) / (burst_duration * freq));
+    if (s_points == 0)
+      s_points = 1;
+    setState(RT::State::EXEC);
+
+    break;
+  default:
+    break;
+  }
 }
 
 /**
