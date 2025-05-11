@@ -4,7 +4,7 @@ project(
     rthybrid_komendantov_kononenko_1996_neuron
     VERSION 0.1.0
     DESCRIPTION "RTHybrid Komendantov-Kononenko (1996) Neuron"
-    HOMEPAGE_URL "https://rtxi.org/"
+    HOMEPAGE_URL "https://github.com/GNB-UAM/rthybrid-for-rtxi/"
     LANGUAGES CXX
 )
 

@@ -4,7 +4,7 @@ project(
     rthybrid_amplitude_scale_offset
     VERSION 0.1.0
     DESCRIPTION "RTHybrid Amplitude Scale Offset"
-    HOMEPAGE_URL "https://rtxi.org/"
+    HOMEPAGE_URL "https://github.com/GNB-UAM/rthybrid-for-rtxi/"
     LANGUAGES CXX
 )
 

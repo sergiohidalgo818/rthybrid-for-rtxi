@@ -4,7 +4,7 @@ project(
     rthybrid_hindmarsh_rose_1984_neuron
     VERSION 0.1.0
     DESCRIPTION "RTHybrid Hindmarsh-Rose (1984) Neuron"
-    HOMEPAGE_URL "https://rtxi.org/"
+    HOMEPAGE_URL "https://github.com/GNB-UAM/rthybrid-for-rtxi/"
     LANGUAGES CXX
 )
 

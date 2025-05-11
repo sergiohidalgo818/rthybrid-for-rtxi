@@ -4,7 +4,7 @@ project(
     rthybrid_burst_analysis
     VERSION 0.1.0
     DESCRIPTION "RTHybrid Burst Analysis"
-    HOMEPAGE_URL "https://rtxi.org/"
+    HOMEPAGE_URL "https://github.com/GNB-UAM/rthybrid-for-rtxi/"
     LANGUAGES CXX
 )
 
