@@ -1,0 +1,99 @@
+
+#include <rtxi/widgets.hpp>
+
+namespace rthybrid_burst_analysis {
+
+constexpr std::string_view MODULE_NAME = "rthybrid_burst_analysis";
+
+enum PARAMETER : Widgets::Variable::Id {
+  // set parameter ids here
+  BURST_ANALYSIS_OBST = 0,
+  BURST_ANALYSIS_MIN,
+  BURST_ANALYSIS_MAX,
+  BURST_ANALYSIS_DUR,
+  BURST_ANALYSIS_UPP_THRESH,
+  BURST_ANALYSIS_DOWN_THRESH,
+  BURST_ANALYSIS_AMPL,
+  BURST_ANALYSIS_PC,
+  BURST_ANALYSIS_BC,
+  BURST_ANALYSIS_ISB,
+};
+
+inline std::vector<Widgets::Variable::Info> get_default_vars() {
+  return {
+      {PARAMETER::BURST_ANALYSIS_OBST, "Observation time (s)",
+       "Observation time", Widgets::Variable::DOUBLE_PARAMETER, 5.0},
+      {PARAMETER::BURST_ANALYSIS_MIN, "Min (V)", "Minimum voltage",
+       Widgets::Variable::DOUBLE_PARAMETER, 999999.0},
+      {PARAMETER::BURST_ANALYSIS_MAX, "Max (V)", "Maximum voltage",
+       Widgets::Variable::DOUBLE_PARAMETER, -999999.0},
+      {PARAMETER::BURST_ANALYSIS_DUR, "Burst duration (s)", "Burst duration",
+       Widgets::Variable::DOUBLE_PARAMETER, 0.0},
+      {PARAMETER::BURST_ANALYSIS_UPP_THRESH, "Upper threshold (V)",
+       "Upper threshold", Widgets::Variable::DOUBLE_PARAMETER, 0.0},
+      {PARAMETER::BURST_ANALYSIS_DOWN_THRESH, "Lower threshold (V)",
+       "Lower threshold", Widgets::Variable::DOUBLE_PARAMETER, 0.0},
+      {PARAMETER::BURST_ANALYSIS_AMPL, "Amplitude (V)", "Amplitude",
+       Widgets::Variable::DOUBLE_PARAMETER, 0.0},
+      {PARAMETER::BURST_ANALYSIS_PC, "Points counter", "Points counter",
+       Widgets::Variable::DOUBLE_PARAMETER, 0.0},
+      {PARAMETER::BURST_ANALYSIS_BC, "Burst counter", "Burst counter",
+       Widgets::Variable::DOUBLE_PARAMETER, -1.0},
+      {PARAMETER::BURST_ANALYSIS_ISB, "Is burst", "",
+       Widgets::Variable::DOUBLE_PARAMETER, 1.0},
+  };
+}
+inline std::vector<IO::channel_t> get_default_channels() {
+  return {
+      {"Vm (V)", "Membrane potential (in V)", IO::INPUT},
+
+      {"Min (V)", "Minimum membrane potential (in V)", IO::OUTPUT},
+      {"Max (V)", "Maximum membrane potential (in V)", IO::OUTPUT},
+      {"Burst duration (s)", "Average burst duration (in s)", IO::OUTPUT},
+  };
+}
+
+class Panel : public Widgets::Panel {
+  Q_OBJECT
+public:
+  Panel(QMainWindow *main_window, Event::Manager *ev_manager);
+
+  // Any functions and data related to the GUI are to be placed here
+  void refresh();
+
+  QLineEdit *min_edit = nullptr;
+  QLineEdit *max_edit = nullptr;
+  QLineEdit *dur_edit = nullptr;
+  QLineEdit *upp_thresh_edit = nullptr;
+  QLineEdit *down_thresh_edit = nullptr;
+  QLineEdit *ampl_edit = nullptr;
+  QLineEdit *isb_edit = nullptr;
+  QLineEdit *pc_edit = nullptr;
+  QLineEdit *bc_edit = nullptr;
+};
+
+class Component : public Widgets::Component {
+public:
+  explicit Component(Widgets::Plugin *hplugin);
+  void execute() override;
+
+  // Additional functionality needed for RealTime computation is to be placed
+  // here
+  static Component *instance;
+  double min, max, sec_per_burst, thresh_up, thresh_down, range, is_burst,
+      pts_counter, burst_counter;
+
+private:
+  double period, freq;
+  double observation_time, temp_min, temp_max, count, burst_dur_sum,
+      old_burst_time;
+
+  void initParameters();
+};
+
+class Plugin : public Widgets::Plugin {
+public:
+  explicit Plugin(Event::Manager *ev_manager);
+};
+
+} // namespace rthybrid_burst_analysis
