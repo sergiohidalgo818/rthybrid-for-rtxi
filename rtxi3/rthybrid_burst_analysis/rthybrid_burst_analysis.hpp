@@ -20,6 +20,7 @@
  * This is a template implementation file for a user module,
  */
 
+#include <qlineedit.h>
 #include <rtxi/widgets.hpp>
 
 namespace RTHybridBurstAnalysis {
@@ -74,47 +75,70 @@ inline std::vector<IO::channel_t> get_default_channels() {
   };
 }
 
+struct analyzer_state_t {
+  double min = 999999.0;
+  double max = -999999.0;
+  double sec_per_burst = 0.0;
+  double pts_counter = 0.0;
+  double burst_counter = 0.0;
+  double thresh_up = 0.0;
+  double thresh_down = 0.0;
+  double range = 0.0;
+  double is_burst = 0.0;
+};
+
 class Panel : public Widgets::Panel {
   Q_OBJECT
 public:
   Panel(QMainWindow *main_window, Event::Manager *ev_manager);
+  // Any functions and data related to the GUI are to be placed
+  // here
+  void refresh() override;
 
-  // Any functions and data related to the GUI are to be placed here
-  void refresh();
-
+private:
   QLineEdit *min_edit = nullptr;
   QLineEdit *max_edit = nullptr;
   QLineEdit *dur_edit = nullptr;
   QLineEdit *upp_thresh_edit = nullptr;
   QLineEdit *down_thresh_edit = nullptr;
   QLineEdit *ampl_edit = nullptr;
-  QLineEdit *isb_edit = nullptr;
   QLineEdit *pc_edit = nullptr;
   QLineEdit *bc_edit = nullptr;
+  QLineEdit *isb_edit = nullptr;
+};
+
+class Plugin : public Widgets::Plugin {
+
+public:
+  explicit Plugin(Event::Manager *ev_manager);
+  analyzer_state_t get_analyzer_state();
+
+private:
+  RT::OS::Fifo *component_fifo;
 };
 
 class Component : public Widgets::Component {
 public:
   explicit Component(Widgets::Plugin *hplugin);
-  void execute() override;
 
+  void execute() override;
   // Additional functionality needed for RealTime computation is to be placed
   // here
-  static Component *instance;
-  double min, max, sec_per_burst, thresh_up, thresh_down, range, is_burst,
-      pts_counter, burst_counter;
+
+  analyzer_state_t get_analyzer_states();
+  RT::OS::Fifo *get_fifo_ptr() { return this->fifo.get(); }
 
 private:
   double period, freq;
   double observation_time, temp_min, temp_max, count, burst_dur_sum,
       old_burst_time;
+  double min, max, sec_per_burst, thresh_up, thresh_down, range, is_burst,
+      pts_counter, burst_counter;
 
-  void initParameters();
-};
+  analyzer_state_t analyzer_state;
+  std::unique_ptr<RT::OS::Fifo> fifo;
 
-class Plugin : public Widgets::Plugin {
-public:
-  explicit Plugin(Event::Manager *ev_manager);
+  void init_parameters();
 };
 
 } // namespace RTHybridBurstAnalysis

@@ -61,7 +61,7 @@ RTHybridHindmarshRose1984Neuron::Panel::Panel(QMainWindow *main_window,
 // v_edit(new QLineEdit(this)), sp_edit(new QLineEdit(this)),
 // dt_edit(new QLineEdit(this)), syn_edit(new QLineEdit(this))
 {
-  setWhatsThis("<p><b>RTHybrid Hindmarsh-Rose (1984) neuron model</b></p>");
+  setWhatsThis("<p><b>RTHybrid Hindmarsh-Rose (1984) neuron model V2</b></p>");
   createGUI(RTHybridHindmarshRose1984Neuron::get_default_vars(),
             {}); // this is required to create the GUI
   auto edits = findChildren<QLineEdit *>();

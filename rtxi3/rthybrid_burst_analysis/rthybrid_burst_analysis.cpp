@@ -21,20 +21,43 @@
  */
 #include "rthybrid_burst_analysis.hpp"
 #include <QTimer>
+#include <cstdio>
+#include <qchar.h>
+#include <qlineedit.h>
+#include <rtxi/fifo.hpp>
 #include <rtxi/rt.hpp>
 #include <rtxi/rtos.hpp>
 
-RTHybridBurstAnalysis::Component *RTHybridBurstAnalysis::Component::instance =
-    nullptr;
+RTHybridBurstAnalysis::Component::Component(Widgets::Plugin *hplugin)
+    : Widgets::Component(hplugin,
+                         std::string(RTHybridBurstAnalysis::MODULE_NAME),
+                         RTHybridBurstAnalysis::get_default_channels(),
+                         RTHybridBurstAnalysis::get_default_vars()) {
+  if (RT::OS::getFifo(this->fifo,
+                      10 * sizeof(RTHybridBurstAnalysis::analyzer_state_t)) <
+      0) {
+    ERROR_MSG("PerformanceMeasurement::Component::Component : Unable to craate "
+              "component fifo");
+    this->setState(RT::State::PAUSE);
+  }
+}
 
 RTHybridBurstAnalysis::Plugin::Plugin(Event::Manager *ev_manager)
     : Widgets::Plugin(ev_manager,
-                      std::string(RTHybridBurstAnalysis::MODULE_NAME)) {}
+                      std::string(RTHybridBurstAnalysis::MODULE_NAME)) {
+  auto component = std::make_unique<RTHybridBurstAnalysis::Component>(this);
+  this->component_fifo = component->get_fifo_ptr();
+  this->attachComponent(std::move(component));
+}
 
 RTHybridBurstAnalysis::Panel::Panel(QMainWindow *main_window,
                                     Event::Manager *ev_manager)
     : Widgets::Panel(std::string(RTHybridBurstAnalysis::MODULE_NAME),
-                     main_window, ev_manager) {
+                     main_window, ev_manager)
+// ,
+// s12_edit(new QLineEdit(this)), o12_edit(new QLineEdit(this)),
+// s21_edit(new QLineEdit(this)), o21_edit(new QLineEdit(this))
+{
   setWhatsThis("<p><b>RTHybridBurstAnalysis:</b><br>RTHybrid module for RTXI "
                "to get the minimum and maximum membrane potential values of a "
                "neuron and its bursts duration.</p>");
@@ -100,53 +123,41 @@ RTHybridBurstAnalysis::Panel::Panel(QMainWindow *main_window,
     bc_edit->setStyleSheet(readonlyStyle);
   }
 
-  QTimer *timer = new QTimer(this);
-  connect(timer, &QTimer::timeout, this,
-          &RTHybridBurstAnalysis::Panel::refresh);
-  timer->start(500); // refresh every 500 ms
-
   this->parentWidget()->adjustSize();
+  auto *timer = new QTimer(this);
+  timer->setInterval(300);
+  QObject::connect(timer, &QTimer::timeout, this,
+                   &RTHybridBurstAnalysis::Panel::refresh);
+  timer->start();
 }
 
-RTHybridBurstAnalysis::Component::Component(Widgets::Plugin *hplugin)
-    : Widgets::Component(hplugin,
-                         std::string(RTHybridBurstAnalysis::MODULE_NAME),
-                         RTHybridBurstAnalysis::get_default_channels(),
-                         RTHybridBurstAnalysis::get_default_vars()) {
-  Component::instance = this;
+RTHybridBurstAnalysis::analyzer_state_t
+RTHybridBurstAnalysis::Plugin::get_analyzer_state() {
+
+  RTHybridBurstAnalysis::analyzer_state_t stat;
+  while (this->component_fifo->read(
+             &stat, sizeof(RTHybridBurstAnalysis::analyzer_state_t)) > 0) {
+  };
+  return stat;
 }
+
 void RTHybridBurstAnalysis::Panel::refresh() {
-  auto *comp = RTHybridBurstAnalysis::Component::instance;
-  if (comp && min_edit) {
-    min_edit->setText(QString::number(comp->min));
-  }
-  if (comp && max_edit) {
-    max_edit->setText(QString::number(comp->max));
-  }
-  if (comp && dur_edit) {
-    dur_edit->setText(QString::number(comp->sec_per_burst));
-  }
-  if (comp && upp_thresh_edit) {
-    upp_thresh_edit->setText(QString::number(comp->thresh_up));
-  }
-  if (comp && down_thresh_edit) {
-    down_thresh_edit->setText(QString::number(comp->thresh_down));
-  }
-  if (comp && ampl_edit) {
-    ampl_edit->setText(QString::number(comp->range));
-  }
-  if (comp && isb_edit) {
-    isb_edit->setText(QString::number(comp->is_burst));
-  }
-  if (comp && pc_edit) {
-    pc_edit->setText(QString::number(comp->pts_counter));
-  }
-  if (comp && bc_edit) {
-    bc_edit->setText(QString::number(comp->burst_counter));
-  }
+  auto *hostplugin =
+      dynamic_cast<RTHybridBurstAnalysis::Plugin *>(this->getHostPlugin());
+  const RTHybridBurstAnalysis::analyzer_state_t s_state =
+      hostplugin->get_analyzer_state();
+  min_edit->setText(QString::number(s_state.min));
+  max_edit->setText(QString::number(s_state.max));
+  dur_edit->setText(QString::number(s_state.sec_per_burst));
+  upp_thresh_edit->setText(QString::number(s_state.thresh_up));
+  down_thresh_edit->setText(QString::number(s_state.thresh_down));
+  ampl_edit->setText(QString::number(s_state.range));
+  isb_edit->setText(QString::number(s_state.is_burst));
+  pc_edit->setText(QString::number(s_state.pts_counter));
+  bc_edit->setText(QString::number(s_state.burst_counter));
 }
 
-void RTHybridBurstAnalysis::Component::initParameters(void) {
+void RTHybridBurstAnalysis::Component::init_parameters(void) {
 
   min = getValue<double>(BURST_ANALYSIS_MIN);
   max = getValue<double>(BURST_ANALYSIS_MAX);
@@ -208,19 +219,27 @@ void RTHybridBurstAnalysis::Component::execute() {
 
     pts_counter++;
     count++;
+
+    analyzer_state = {
+        min,   max,         sec_per_burst, pts_counter, burst_counter,
+        range, thresh_down, range,         is_burst,
+    };
+
+    this->fifo->writeRT(&this->analyzer_state,
+                        sizeof(RTHybridBurstAnalysis::analyzer_state_t));
+
     break;
+
   case RT::State::INIT:
     period = RT::OS::getPeriod() * 1e-6;
     freq = 1.0 / (period * 1e-3);
     observation_time = getValue<double>(BURST_ANALYSIS_OBST);
 
-    initParameters();
+    init_parameters();
     setState(RT::State::PAUSE);
     break;
   case RT::State::MODIFY:
-    observation_time = getValue<double>(BURST_ANALYSIS_OBST);
-
-    setState(RT::State::PAUSE);
+    setState(RT::State::INIT);
     break;
   case RT::State::PERIOD:
     period = RT::OS::getPeriod() * 1e-6;

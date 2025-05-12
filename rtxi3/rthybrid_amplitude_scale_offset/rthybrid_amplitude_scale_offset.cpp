@@ -21,21 +21,45 @@
  */
 #include "rthybrid_amplitude_scale_offset.hpp"
 #include <QTimer>
+#include <cmath>
 #include <cstdio>
+#include <qchar.h>
+#include <qlineedit.h>
+#include <rtxi/fifo.hpp>
 #include <rtxi/rt.hpp>
 #include <rtxi/rtos.hpp>
 
-RTHybridAmplitudeScaleOffset::Component
-    *RTHybridAmplitudeScaleOffset::Component::instance = nullptr;
+RTHybridAmplitudeScaleOffset::Component::Component(Widgets::Plugin *hplugin)
+    : Widgets::Component(hplugin,
+                         std::string(RTHybridAmplitudeScaleOffset::MODULE_NAME),
+                         RTHybridAmplitudeScaleOffset::get_default_channels(),
+                         RTHybridAmplitudeScaleOffset::get_default_vars()) {
+  if (RT::OS::getFifo(
+          this->fifo,
+          10 * sizeof(RTHybridAmplitudeScaleOffset::scaler_state_t)) < 0) {
+    ERROR_MSG("PerformanceMeasurement::Component::Component : Unable to craate "
+              "component fifo");
+    this->setState(RT::State::PAUSE);
+  }
+}
 
 RTHybridAmplitudeScaleOffset::Plugin::Plugin(Event::Manager *ev_manager)
     : Widgets::Plugin(ev_manager,
-                      std::string(RTHybridAmplitudeScaleOffset::MODULE_NAME)) {}
+                      std::string(RTHybridAmplitudeScaleOffset::MODULE_NAME)) {
+  auto component =
+      std::make_unique<RTHybridAmplitudeScaleOffset::Component>(this);
+  this->component_fifo = component->get_fifo_ptr();
+  this->attachComponent(std::move(component));
+}
 
 RTHybridAmplitudeScaleOffset::Panel::Panel(QMainWindow *main_window,
                                            Event::Manager *ev_manager)
     : Widgets::Panel(std::string(RTHybridAmplitudeScaleOffset::MODULE_NAME),
-                     main_window, ev_manager) {
+                     main_window, ev_manager)
+// ,
+// s12_edit(new QLineEdit(this)), o12_edit(new QLineEdit(this)),
+// s21_edit(new QLineEdit(this)), o21_edit(new QLineEdit(this))
+{
   setWhatsThis(
       "<p><b>RTHybrid Amplitude Scale Offset:</b><br>Given two neurons "
       "membrane potential minimum and maximum values, this module calculates "
@@ -45,7 +69,6 @@ RTHybridAmplitudeScaleOffset::Panel::Panel(QMainWindow *main_window,
       "Neuron 2 membrane potential, and viceversa.</p>");
   createGUI(RTHybridAmplitudeScaleOffset::get_default_vars(),
             {}); // this is required to create the GUI
-
   auto edits = findChildren<QLineEdit *>();
   QString readonlyStyle = R"(
     QLineEdit {
@@ -60,55 +83,61 @@ RTHybridAmplitudeScaleOffset::Panel::Panel(QMainWindow *main_window,
   )";
 
   s12_edit = edits[AMPLITUDE_SCALE_S12];
-  s21_edit = edits[AMPLITUDE_SCALE_S21];
   o12_edit = edits[AMPLITUDE_SCALE_O12];
+  s21_edit = edits[AMPLITUDE_SCALE_S21];
   o21_edit = edits[AMPLITUDE_SCALE_O21];
+
   if (s12_edit) {
     s12_edit->setReadOnly(true);
     s12_edit->setStyleSheet(readonlyStyle);
   }
-  if (s21_edit) {
-    s21_edit->setReadOnly(true);
-    s21_edit->setStyleSheet(readonlyStyle);
-  }
   if (o12_edit) {
     o12_edit->setReadOnly(true);
     o12_edit->setStyleSheet(readonlyStyle);
+  }
+  if (s21_edit) {
+    s21_edit->setReadOnly(true);
+    s21_edit->setStyleSheet(readonlyStyle);
   }
   if (o21_edit) {
     o21_edit->setReadOnly(true);
     o21_edit->setStyleSheet(readonlyStyle);
   }
 
-  QTimer *timer = new QTimer(this);
-  connect(timer, &QTimer::timeout, this,
-          &RTHybridAmplitudeScaleOffset::Panel::refresh);
-  timer->start(500); // refresh every 500 ms
   this->parentWidget()->adjustSize();
+  auto *timer = new QTimer(this);
+  timer->setInterval(1000);
+  QObject::connect(timer, &QTimer::timeout, this,
+                   &RTHybridAmplitudeScaleOffset::Panel::refresh);
+  timer->start();
 }
 
-RTHybridAmplitudeScaleOffset::Component::Component(Widgets::Plugin *hplugin)
-    : Widgets::Component(hplugin,
-                         std::string(RTHybridAmplitudeScaleOffset::MODULE_NAME),
-                         RTHybridAmplitudeScaleOffset::get_default_channels(),
-                         RTHybridAmplitudeScaleOffset::get_default_vars()) {
-  Component::instance = this;
+RTHybridAmplitudeScaleOffset::scaler_state_t
+RTHybridAmplitudeScaleOffset::Plugin::get_scaler_state() {
+
+  RTHybridAmplitudeScaleOffset::scaler_state_t stat;
+  while (this->component_fifo->read(
+             &stat, sizeof(RTHybridAmplitudeScaleOffset::scaler_state_t)) > 0) {
+  };
+  return stat;
 }
 
 void RTHybridAmplitudeScaleOffset::Panel::refresh() {
-  auto *comp = RTHybridAmplitudeScaleOffset::Component::instance;
-  if (comp && s12_edit) {
-    s12_edit->setText(QString::number(comp->s12));
-  }
-  if (comp && s21_edit) {
-    s21_edit->setText(QString::number(comp->s21));
-  }
-  if (comp && o12_edit) {
-    o12_edit->setText(QString::number(comp->o12));
-  }
-  if (comp && o21_edit) {
-    o21_edit->setText(QString::number(comp->o21));
-  }
+  auto *hostplugin = dynamic_cast<RTHybridAmplitudeScaleOffset::Plugin *>(
+      this->getHostPlugin());
+  const RTHybridAmplitudeScaleOffset::scaler_state_t s_state =
+      hostplugin->get_scaler_state();
+  s12_edit->setText(QString::number(s_state.s12));
+  o12_edit->setText(QString::number(s_state.o12));
+  s21_edit->setText(QString::number(s_state.s21));
+  o21_edit->setText(QString::number(s_state.o21));
+}
+
+void RTHybridAmplitudeScaleOffset::Component::init_parameters(void) {
+  s12 = getValue<double>(AMPLITUDE_SCALE_S12);
+  s21 = getValue<double>(AMPLITUDE_SCALE_S21);
+  o12 = getValue<double>(AMPLITUDE_SCALE_O12);
+  o21 = getValue<double>(AMPLITUDE_SCALE_O21);
 }
 
 void RTHybridAmplitudeScaleOffset::Component::execute() {
@@ -141,11 +170,19 @@ void RTHybridAmplitudeScaleOffset::Component::execute() {
     writeoutput(2, s21);
     writeoutput(3, o21);
 
+    scaler_state.s12 = s12;
+    scaler_state.o12 = o12;
+    scaler_state.s21 = s21;
+    scaler_state.o21 = o21;
+
+    this->fifo->writeRT(&this->scaler_state,
+                        sizeof(RTHybridAmplitudeScaleOffset::scaler_state_t));
+
     break;
   case RT::State::INIT:
     period = RT::OS::getPeriod() * 1e-6; // ms
 
-    initParameters();
+    init_parameters();
     setState(RT::State::PAUSE);
 
     break;
@@ -168,18 +205,11 @@ void RTHybridAmplitudeScaleOffset::Component::execute() {
   }
 }
 
-void RTHybridAmplitudeScaleOffset::Component::initParameters() {
-  s12 = getValue<double>(AMPLITUDE_SCALE_S12);
-  s21 = getValue<double>(AMPLITUDE_SCALE_S21);
-  o12 = getValue<double>(AMPLITUDE_SCALE_O12);
-  o21 = getValue<double>(AMPLITUDE_SCALE_O21);
-}
-
 ///////// DO NOT MODIFY BELOW //////////
-// The exception is if your plugin is not going to need real-time functionality.
-// For this case just replace the craeteRTXIComponent return type to nullptr.
-// RTXI will automatically handle that case and won't attach a component to the
-// real time thread for your plugin.
+// The exception is if your plugin is not going to need real-time
+// functionality. For this case just replace the craeteRTXIComponent return
+// type to nullptr. RTXI will automatically handle that case and won't attach
+// a component to the real time thread for your plugin.
 
 std::unique_ptr<Widgets::Plugin> createRTXIPlugin(Event::Manager *ev_manager) {
   return std::make_unique<RTHybridAmplitudeScaleOffset::Plugin>(ev_manager);

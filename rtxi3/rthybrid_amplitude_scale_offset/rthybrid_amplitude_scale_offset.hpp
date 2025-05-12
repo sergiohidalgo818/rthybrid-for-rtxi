@@ -89,38 +89,57 @@ inline std::vector<IO::channel_t> get_default_channels() {
           }};
 }
 
+struct scaler_state_t {
+  double s12 = 0.0;
+  double o12 = 0.0;
+  double s21 = 0.0;
+  double o21 = 0.0;
+};
+
 class Panel : public Widgets::Panel {
   Q_OBJECT
 public:
   Panel(QMainWindow *main_window, Event::Manager *ev_manager);
+  // Any functions and data related to the GUI are to be placed
+  // here
+  void refresh() override;
 
-  // Any functions and data related to the GUI are to be placed here
-  void refresh();
+private:
   QLineEdit *s12_edit = nullptr;
   QLineEdit *s21_edit = nullptr;
   QLineEdit *o12_edit = nullptr;
   QLineEdit *o21_edit = nullptr;
 };
 
+class Plugin : public Widgets::Plugin {
+
+public:
+  explicit Plugin(Event::Manager *ev_manager);
+  scaler_state_t get_scaler_state();
+
+private:
+  RT::OS::Fifo *component_fifo;
+};
+
 class Component : public Widgets::Component {
 public:
   explicit Component(Widgets::Plugin *hplugin);
-  void execute() override;
 
+  void execute() override;
   // Additional functionality needed for RealTime computation is to be placed
   // here
-  static Component *instance;
-  double s12, s21, o12, o21;
+
+  scaler_state_t get_scaler_states();
+  RT::OS::Fifo *get_fifo_ptr() { return this->fifo.get(); }
 
 private:
   double period;
+  double s12, s21, o12, o21;
 
-  void initParameters();
-};
+  scaler_state_t scaler_state;
+  std::unique_ptr<RT::OS::Fifo> fifo;
 
-class Plugin : public Widgets::Plugin {
-public:
-  explicit Plugin(Event::Manager *ev_manager);
+  void init_parameters();
 };
 
 } // namespace RTHybridAmplitudeScaleOffset
