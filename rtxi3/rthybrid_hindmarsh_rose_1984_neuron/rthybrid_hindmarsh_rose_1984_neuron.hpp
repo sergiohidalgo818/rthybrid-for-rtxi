@@ -107,12 +107,14 @@ inline std::vector<IO::channel_t> get_default_channels() {
           {"Isyn (nA)", "Synaptic input current (in nA)", IO::INPUT},
           {"Burst duration (s)", "Burst duration", IO::INPUT}};
 }
+
 struct neuron_state_t {
   double v = 0.0;
   double s_points = 0.0;
   double dt_points = 0.0;
   double syn_points = 0.0;
 };
+
 class Panel : public Widgets::Panel {
   Q_OBJECT
 public:
@@ -141,11 +143,12 @@ private:
 class Component : public Widgets::Component {
 public:
   explicit Component(Widgets::Plugin *hplugin);
-  neuron_state_t get_neuron_states();
 
   void execute() override;
   // Additional functionality needed for RealTime computation is to be placed
   // here
+
+  neuron_state_t get_neuron_states();
   RT::OS::Fifo *get_fifo_ptr() { return this->fifo.get(); }
 
 private:

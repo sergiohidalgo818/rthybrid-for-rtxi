@@ -18,7 +18,7 @@ read user_input
 if [ "$user_input" = "y" ] || [ "$user_input" = "Y" ]; then
   echo "Copying plugins to $PLUGIN_DEST_DIR..."
   sudo mkdir -p "$PLUGIN_DEST_DIR"
-  sudo cp "$PLUGIN_SRC_DIR"/* "$PLUGIN_DEST_DIR"/
+  sudo cp "$PLUGIN_SRC_DIR"/librthybrid_* "$PLUGIN_DEST_DIR"/
   echo "Plugins successfully copied."
 else
   echo "Skipping plugin copy."

@@ -107,6 +107,17 @@ RTHybridHindmarshRose1984Neuron::Panel::Panel(QMainWindow *main_window,
   timer->start();
 }
 
+RTHybridHindmarshRose1984Neuron::neuron_state_t
+RTHybridHindmarshRose1984Neuron::Plugin::get_neuron_state() {
+
+  RTHybridHindmarshRose1984Neuron::neuron_state_t stat;
+  while (this->component_fifo->read(
+             &stat, sizeof(RTHybridHindmarshRose1984Neuron::neuron_state_t)) >
+         0) {
+  };
+  return stat;
+}
+
 void RTHybridHindmarshRose1984Neuron::Panel::refresh() {
   auto *hostplugin = dynamic_cast<RTHybridHindmarshRose1984Neuron::Plugin *>(
       this->getHostPlugin());
@@ -151,17 +162,6 @@ void RTHybridHindmarshRose1984Neuron::Component::init_parameters(void) {
       getValue<double>(V_NM_HINDMARSH_ROSE_1984_C);
   params_model[NM_HINDMARSH_ROSE_1984_D] =
       getValue<double>(V_NM_HINDMARSH_ROSE_1984_D);
-}
-
-RTHybridHindmarshRose1984Neuron::neuron_state_t
-RTHybridHindmarshRose1984Neuron::Plugin::get_neuron_state() {
-
-  RTHybridHindmarshRose1984Neuron::neuron_state_t stat;
-  while (this->component_fifo->read(
-             &stat, sizeof(RTHybridHindmarshRose1984Neuron::neuron_state_t)) >
-         0) {
-  };
-  return stat;
 }
 
 void RTHybridHindmarshRose1984Neuron::Component::execute() {
