@@ -36,8 +36,8 @@ enum PARAMETER : Widgets::Variable::Id {
 
 enum CONDUCTANCE_VARIABLE {
 
-  SM_ELECTRICAL_N_G = 0,
-  SM_ELECTRICAL_G,
+  SM_ELECTRICAL_G = 0,
+  SM_ELECTRICAL_N_G,
 };
 
 inline std::vector<Widgets::Variable::Info> get_default_vars() {
@@ -69,40 +69,58 @@ inline std::vector<IO::channel_t> get_default_channels() {
        IO::INPUT},
   };
 }
+struct synapse_state_t {
+  double current = 0.0;
+  double offset = 0.0;
+  double scale = 0.0;
+};
 
 class Panel : public Widgets::Panel {
   Q_OBJECT
 public:
   Panel(QMainWindow *main_window, Event::Manager *ev_manager);
+  // Any functions and data related to the GUI are to be placed
+  // here
+  void refresh() override;
 
-  // Any functions and data related to the GUI are to be placed here
-  void refresh();
+private:
   QLineEdit *current_edit = nullptr;
   QLineEdit *offset_edit = nullptr;
   QLineEdit *scale_edit = nullptr;
 };
 
+class Plugin : public Widgets::Plugin {
+
+public:
+  explicit Plugin(Event::Manager *ev_manager);
+  synapse_state_t get_synapse_state();
+
+private:
+  RT::OS::Fifo *component_fifo;
+};
+
 class Component : public Widgets::Component {
 public:
   explicit Component(Widgets::Plugin *hplugin);
+
   void execute() override;
   // Additional functionality needed for RealTime computation is to be placed
   // here
-  static Component *instance;
-  double i, offset, scale;
+
+  synapse_state_t get_synapse_states();
+  RT::OS::Fifo *get_fifo_ptr() { return this->fifo.get(); }
 
 private:
   double period;
-
+  double i, offset, scale;
   double g[1];
 
-  void initParameters();
-  void sm_electrical(double v_post, double v_pre, double *ret);
-};
+  synapse_state_t synapse_state;
+  std::unique_ptr<RT::OS::Fifo> fifo;
 
-class Plugin : public Widgets::Plugin {
-public:
-  explicit Plugin(Event::Manager *ev_manager);
+  void init_parameters();
+  ;
+  void sm_electrical(double v_post, double v_pre, double *ret);
 };
 
 } // namespace RTHybridElectricalSynapse

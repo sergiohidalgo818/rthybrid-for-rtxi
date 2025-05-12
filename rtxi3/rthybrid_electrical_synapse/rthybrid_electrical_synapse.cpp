@@ -22,19 +22,41 @@
 #include "rthybrid_electrical_synapse.hpp"
 
 #include <QTimer>
+#include <qlineedit.h>
+#include <rtxi/fifo.hpp>
+#include <rtxi/rt.hpp>
 #include <rtxi/rtos.hpp>
 
-RTHybridElectricalSynapse::Component
-    *RTHybridElectricalSynapse::Component::instance = nullptr;
+RTHybridElectricalSynapse::Component::Component(Widgets::Plugin *hplugin)
+    : Widgets::Component(hplugin,
+                         std::string(RTHybridElectricalSynapse::MODULE_NAME),
+                         RTHybridElectricalSynapse::get_default_channels(),
+                         RTHybridElectricalSynapse::get_default_vars()) {
+  if (RT::OS::getFifo(this->fifo,
+                      10 * sizeof(RTHybridElectricalSynapse::synapse_state_t)) <
+      0) {
+    ERROR_MSG("PerformanceMeasurement::Component::Component : Unable to craate "
+              "component fifo");
+    this->setState(RT::State::PAUSE);
+  }
+}
 
 RTHybridElectricalSynapse::Plugin::Plugin(Event::Manager *ev_manager)
     : Widgets::Plugin(ev_manager,
-                      std::string(RTHybridElectricalSynapse::MODULE_NAME)) {}
+                      std::string(RTHybridElectricalSynapse::MODULE_NAME)) {
+  auto component = std::make_unique<RTHybridElectricalSynapse::Component>(this);
+  this->component_fifo = component->get_fifo_ptr();
+  this->attachComponent(std::move(component));
+}
 
 RTHybridElectricalSynapse::Panel::Panel(QMainWindow *main_window,
                                         Event::Manager *ev_manager)
     : Widgets::Panel(std::string(RTHybridElectricalSynapse::MODULE_NAME),
-                     main_window, ev_manager) {
+                     main_window, ev_manager)
+// ,
+// s12_edit(new QLineEdit(this)), o12_edit(new QLineEdit(this)),
+// s21_edit(new QLineEdit(this)), o21_edit(new QLineEdit(this))
+{
   setWhatsThis(
       "<p><b>RTHybrid electrical synapse model</b><br>RTHybrid module for RTXI "
       "that implements a gap junction electrical synapse model.</p>");
@@ -72,38 +94,34 @@ RTHybridElectricalSynapse::Panel::Panel(QMainWindow *main_window,
     scale_edit->setStyleSheet(readonlyStyle);
   }
 
+  this->parentWidget()->adjustSize();
   QTimer *timer = new QTimer(this);
   connect(timer, &QTimer::timeout, this,
           &RTHybridElectricalSynapse::Panel::refresh);
   timer->start(500); // refresh every 500 ms
-  this->parentWidget()->adjustSize();
-  this->parentWidget()->adjustSize();
 }
+RTHybridElectricalSynapse::synapse_state_t
+RTHybridElectricalSynapse::Plugin::get_synapse_state() {
 
-RTHybridElectricalSynapse::Component::Component(Widgets::Plugin *hplugin)
-    : Widgets::Component(hplugin,
-                         std::string(RTHybridElectricalSynapse::MODULE_NAME),
-                         RTHybridElectricalSynapse::get_default_channels(),
-                         RTHybridElectricalSynapse::get_default_vars()) {
-  Component::instance = this;
+  RTHybridElectricalSynapse::synapse_state_t stat;
+  while (this->component_fifo->read(
+             &stat, sizeof(RTHybridElectricalSynapse::synapse_state_t)) > 0) {
+  };
+  return stat;
 }
 
 void RTHybridElectricalSynapse::Panel::refresh() {
-  auto *comp = RTHybridElectricalSynapse::Component::instance;
+  auto *hostplugin =
+      dynamic_cast<RTHybridElectricalSynapse::Plugin *>(this->getHostPlugin());
+  const RTHybridElectricalSynapse::synapse_state_t s_state =
+      hostplugin->get_synapse_state();
 
-  if (comp && current_edit) {
-    current_edit->setText(QString::number(comp->i));
-  }
-
-  if (comp && offset_edit) {
-    offset_edit->setText(QString::number(comp->offset));
-  }
-
-  if (comp && scale_edit) {
-    scale_edit->setText(QString::number(comp->scale));
-  }
+  current_edit->setText(QString::number(s_state.current));
+  offset_edit->setText(QString::number(s_state.offset));
+  scale_edit->setText(QString::number(s_state.scale));
 }
-void RTHybridElectricalSynapse::Component::initParameters(void) {
+
+void RTHybridElectricalSynapse::Component::init_parameters(void) {
   g[SM_ELECTRICAL_G] = getValue<double>(ELECTRICAL_SYNAPSE_G);
   scale = getValue<double>(ELECTRICAL_SYNAPSE_SCALE);
   offset = getValue<double>(ELECTRICAL_SYNAPSE_OFFSET);
@@ -126,16 +144,22 @@ void RTHybridElectricalSynapse::Component::execute() {
 
     writeoutput(0, i);
 
+    synapse_state.current = i;
+    synapse_state.offset = offset;
+    synapse_state.scale = scale;
+
+    this->fifo->writeRT(&this->synapse_state,
+                        sizeof(RTHybridElectricalSynapse::synapse_state_t));
+
     break;
   case RT::State::INIT:
     period = RT::OS::getPeriod() * 1e-6; // ms
 
-    initParameters();
+    init_parameters();
     setState(RT::State::PAUSE);
     break;
   case RT::State::MODIFY:
-    initParameters();
-    setState(RT::State::PAUSE);
+    setState(RT::State::INIT);
     break;
   case RT::State::PERIOD:
     period = RT::OS::getPeriod() * 1e-6; // ms
