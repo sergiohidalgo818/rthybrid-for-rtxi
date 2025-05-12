@@ -151,38 +151,61 @@ inline std::vector<IO::channel_t> get_default_channels() {
   };
 }
 
+struct neuron_state_t {
+  double v = 0.0;
+  double s_points = 0.0;
+  double dt_points = 0.0;
+  double syn_points = 0.0;
+};
+
 class Panel : public Widgets::Panel {
   Q_OBJECT
 public:
   Panel(QMainWindow *main_window, Event::Manager *ev_manager);
+  // Any functions and data related to the GUI are to be placed
+  // here
+  void refresh() override;
 
-  // Any functions and data related to the GUI are to be placed here
-  void refresh();
+private:
   QLineEdit *v_edit = nullptr;
   QLineEdit *sp_edit = nullptr;
   QLineEdit *dt_edit = nullptr;
   QLineEdit *syn_edit = nullptr;
 };
 
+class Plugin : public Widgets::Plugin {
+
+public:
+  explicit Plugin(Event::Manager *ev_manager);
+  neuron_state_t get_neuron_state();
+
+private:
+  RT::OS::Fifo *component_fifo;
+};
+
 class Component : public Widgets::Component {
 public:
   explicit Component(Widgets::Plugin *hplugin);
-  void execute() override;
 
+  void execute() override;
   // Additional functionality needed for RealTime computation is to be placed
   // here
-  static Component *instance;
 
+  neuron_state_t get_neuron_states();
+  RT::OS::Fifo *get_fifo_ptr() { return this->fifo.get(); }
+
+private:
+  double period, freq;
+  double burst_duration;
   double vars_model[8];
   double params_model[20];
   double s_points;
   double burst_duration_value;
 
-private:
-  double period, freq;
-  double burst_duration;
+  neuron_state_t neuron_state;
+  std::unique_ptr<RT::OS::Fifo> fifo;
 
-  void initParameters();
+  void init_parameters();
 
   void runge_kutta_65(void (*f)(double *, double *, double *, double), int dim,
                       double dt, double *vars, double *params, double aux);
@@ -216,11 +239,6 @@ private:
   static double nm_komendantov_kononenko_1996_Ca(double *vars, double *params);
   static void nm_komendantov_kononenko_1996_f(double *vars, double *ret,
                                               double *params, double syn);
-};
-
-class Plugin : public Widgets::Plugin {
-public:
-  explicit Plugin(Event::Manager *ev_manager);
 };
 
 } // namespace RTHybridKomendantovKononenko1996Neuron

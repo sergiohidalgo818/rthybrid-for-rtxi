@@ -24,25 +24,50 @@
 #include <QTimer>
 #include <cmath>
 #include <cstdio>
-#include <qobject.h>
+#include <qchar.h>
+#include <qlineedit.h>
+#include <rtxi/fifo.hpp>
 #include <rtxi/rt.hpp>
 #include <rtxi/rtos.hpp>
 
-RTHybridKomendantovKononenko1996Neuron::Component
-    *RTHybridKomendantovKononenko1996Neuron::Component::instance = nullptr;
+RTHybridKomendantovKononenko1996Neuron::Component::Component(
+    Widgets::Plugin *hplugin)
+    : Widgets::Component(
+          hplugin,
+          std::string(RTHybridKomendantovKononenko1996Neuron::MODULE_NAME),
+          RTHybridKomendantovKononenko1996Neuron::get_default_channels(),
+          RTHybridKomendantovKononenko1996Neuron::get_default_vars()) {
+  if (RT::OS::getFifo(
+          this->fifo,
+          10 * sizeof(RTHybridKomendantovKononenko1996Neuron::neuron_state_t)) <
+      0) {
+    ERROR_MSG("PerformanceMeasurement::Component::Component : Unable to craate "
+              "component fifo");
+    this->setState(RT::State::PAUSE);
+  }
+}
 
 RTHybridKomendantovKononenko1996Neuron::Plugin::Plugin(
     Event::Manager *ev_manager)
     : Widgets::Plugin(
           ev_manager,
-          std::string(RTHybridKomendantovKononenko1996Neuron::MODULE_NAME)) {}
+          std::string(RTHybridKomendantovKononenko1996Neuron::MODULE_NAME)) {
+  auto component =
+      std::make_unique<RTHybridKomendantovKononenko1996Neuron::Component>(this);
+  this->component_fifo = component->get_fifo_ptr();
+  this->attachComponent(std::move(component));
+}
 
 RTHybridKomendantovKononenko1996Neuron::Panel::Panel(QMainWindow *main_window,
                                                      Event::Manager *ev_manager)
     : Widgets::Panel(
           std::string(RTHybridKomendantovKononenko1996Neuron::MODULE_NAME),
-          main_window, ev_manager) {
-  setWhatsThis("Template Plugin");
+          main_window, ev_manager)
+// ,
+// v_edit(new QLineEdit(this)), sp_edit(new QLineEdit(this)),
+// dt_edit(new QLineEdit(this)), syn_edit(new QLineEdit(this))
+{
+  setWhatsThis("<p><b>RTHybrid Hindmarsh-Rose (1984) neuron model</b></p>");
   createGUI(RTHybridKomendantovKononenko1996Neuron::get_default_vars(),
             {}); // this is required to create the GUI
   auto edits = findChildren<QLineEdit *>();
@@ -80,43 +105,39 @@ RTHybridKomendantovKononenko1996Neuron::Panel::Panel(QMainWindow *main_window,
     syn_edit->setStyleSheet(readonlyStyle);
   }
 
-  QTimer *timer = new QTimer(this);
-  connect(timer, &QTimer::timeout, this,
-          &RTHybridKomendantovKononenko1996Neuron::Panel::refresh);
-  timer->start(500); // refresh every 500 ms
   this->parentWidget()->adjustSize();
+  auto *timer = new QTimer(this);
+  timer->setInterval(1000);
+  QObject::connect(timer, &QTimer::timeout, this,
+                   &RTHybridKomendantovKononenko1996Neuron::Panel::refresh);
+  timer->start();
 }
 
-RTHybridKomendantovKononenko1996Neuron::Component::Component(
-    Widgets::Plugin *hplugin)
-    : Widgets::Component(
-          hplugin,
-          std::string(RTHybridKomendantovKononenko1996Neuron::MODULE_NAME),
-          RTHybridKomendantovKononenko1996Neuron::get_default_channels(),
-          RTHybridKomendantovKononenko1996Neuron::get_default_vars()) {
-  Component::instance = this;
+RTHybridKomendantovKononenko1996Neuron::neuron_state_t
+RTHybridKomendantovKononenko1996Neuron::Plugin::get_neuron_state() {
+
+  RTHybridKomendantovKononenko1996Neuron::neuron_state_t stat;
+  while (this->component_fifo->read(
+             &stat,
+             sizeof(RTHybridKomendantovKononenko1996Neuron::neuron_state_t)) >
+         0) {
+  };
+  return stat;
 }
 
 void RTHybridKomendantovKononenko1996Neuron::Panel::refresh() {
-  auto *comp = RTHybridKomendantovKononenko1996Neuron::Component::instance;
-  if (comp && v_edit) {
-    v_edit->setText(
-        QString::number(comp->vars_model[NM_KOMENDANTOV_KONONENKO_1996_V]));
-  }
-  if (comp && sp_edit) {
-    sp_edit->setText(QString::number(comp->s_points));
-  }
-  if (comp && dt_edit) {
-    dt_edit->setText(
-        QString::number(comp->params_model[NM_KOMENDANTOV_KONONENKO_1996_DT]));
-  }
-  if (comp && syn_edit) {
-    syn_edit->setText(
-        QString::number(comp->params_model[NM_KOMENDANTOV_KONONENKO_1996_SYN]));
-  }
+  auto *hostplugin =
+      dynamic_cast<RTHybridKomendantovKononenko1996Neuron::Plugin *>(
+          this->getHostPlugin());
+  const RTHybridKomendantovKononenko1996Neuron::neuron_state_t n_state =
+      hostplugin->get_neuron_state();
+  v_edit->setText(QString::number(n_state.v));
+  sp_edit->setText(QString::number(n_state.s_points));
+  dt_edit->setText(QString::number(n_state.dt_points));
+  syn_edit->setText(QString::number(n_state.syn_points));
 }
 
-void RTHybridKomendantovKononenko1996Neuron::Component::initParameters() {
+void RTHybridKomendantovKononenko1996Neuron::Component::init_parameters(void) {
   burst_duration_value = getValue<double>(V_NM_KOMENDANTOV_KONONENKO_1996_BD);
   burst_duration = burst_duration_value;
 
@@ -220,19 +241,29 @@ void RTHybridKomendantovKononenko1996Neuron::Component::execute() {
 
     writeoutput(0, vars_model[NM_KOMENDANTOV_KONONENKO_1996_V] / 1000.0);
     writeoutput(1, vars_model[NM_KOMENDANTOV_KONONENKO_1996_V]);
+
+    neuron_state.v = vars_model[NM_KOMENDANTOV_KONONENKO_1996_V];
+    neuron_state.dt_points = params_model[NM_KOMENDANTOV_KONONENKO_1996_DT];
+    neuron_state.syn_points = params_model[NM_KOMENDANTOV_KONONENKO_1996_SYN];
+    neuron_state.s_points = s_points;
+
+    this->fifo->writeRT(
+        &this->neuron_state,
+        sizeof(RTHybridKomendantovKononenko1996Neuron::neuron_state_t));
+
     break;
   case RT::State::INIT:
     period = RT::OS::getPeriod() * 1e-6; // ms
     freq = 1.0 / (period * 1e-3);
 
-    this->initParameters();
+    this->init_parameters();
     setState(RT::State::EXEC);
     break;
   case RT::State::MODIFY:
     period = RT::OS::getPeriod() * 1e-6; // ms
     freq = 1.0 / (period * 1e-3);
 
-    this->initParameters();
+    this->init_parameters();
     setState(RT::State::PAUSE);
     break;
   case RT::State::PERIOD:
