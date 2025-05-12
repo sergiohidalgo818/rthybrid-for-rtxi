@@ -416,6 +416,10 @@ void RTHybridHindmarshRose1984Neuron::Component::runge_kutta_65(
   double k[6][dim];
   int j;
 
+  if (!aux) {
+    aux = 0.0;
+  }
+
   (*f)(vars, retorno, params, aux);
   for (j = 0; j < dim; ++j) {
     k[0][j] = dt * retorno[j];
