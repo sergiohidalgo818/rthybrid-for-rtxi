@@ -23,21 +23,44 @@
 #include <QTimer>
 #include <cmath>
 #include <cstdio>
+#include <qchar.h>
+#include <qlineedit.h>
+#include <rtxi/fifo.hpp>
 #include <rtxi/rt.hpp>
 #include <rtxi/rtos.hpp>
 
-RTHybridHindmarshRose1984Neuron::Component
-    *RTHybridHindmarshRose1984Neuron::Component::instance = nullptr;
+RTHybridHindmarshRose1984Neuron::Component::Component(Widgets::Plugin *hplugin)
+    : Widgets::Component(
+          hplugin, std::string(RTHybridHindmarshRose1984Neuron::MODULE_NAME),
+          RTHybridHindmarshRose1984Neuron::get_default_channels(),
+          RTHybridHindmarshRose1984Neuron::get_default_vars()) {
+  if (RT::OS::getFifo(
+          this->fifo,
+          10 * sizeof(RTHybridHindmarshRose1984Neuron::neuron_state_t)) < 0) {
+    ERROR_MSG("PerformanceMeasurement::Component::Component : Unable to craate "
+              "component fifo");
+    this->setState(RT::State::PAUSE);
+  }
+}
 
 RTHybridHindmarshRose1984Neuron::Plugin::Plugin(Event::Manager *ev_manager)
     : Widgets::Plugin(
           ev_manager,
-          std::string(RTHybridHindmarshRose1984Neuron::MODULE_NAME)) {}
+          std::string(RTHybridHindmarshRose1984Neuron::MODULE_NAME)) {
+  auto component =
+      std::make_unique<RTHybridHindmarshRose1984Neuron::Component>(this);
+  this->component_fifo = component->get_fifo_ptr();
+  this->attachComponent(std::move(component));
+}
 
 RTHybridHindmarshRose1984Neuron::Panel::Panel(QMainWindow *main_window,
                                               Event::Manager *ev_manager)
     : Widgets::Panel(std::string(RTHybridHindmarshRose1984Neuron::MODULE_NAME),
-                     main_window, ev_manager) {
+                     main_window, ev_manager)
+// ,
+// v_edit(new QLineEdit(this)), sp_edit(new QLineEdit(this)),
+// dt_edit(new QLineEdit(this)), syn_edit(new QLineEdit(this))
+{
   setWhatsThis("<p><b>RTHybrid Hindmarsh-Rose (1984) neuron model</b></p>");
   createGUI(RTHybridHindmarshRose1984Neuron::get_default_vars(),
             {}); // this is required to create the GUI
@@ -76,42 +99,26 @@ RTHybridHindmarshRose1984Neuron::Panel::Panel(QMainWindow *main_window,
     syn_edit->setStyleSheet(readonlyStyle);
   }
 
-  QTimer *timer = new QTimer(this);
-  connect(timer, &QTimer::timeout, this,
-          &RTHybridHindmarshRose1984Neuron::Panel::refresh);
-  timer->start(500); // refresh every 500 ms
   this->parentWidget()->adjustSize();
-}
-
-RTHybridHindmarshRose1984Neuron::Component::Component(Widgets::Plugin *hplugin)
-    : Widgets::Component(
-          hplugin, std::string(RTHybridHindmarshRose1984Neuron::MODULE_NAME),
-          RTHybridHindmarshRose1984Neuron::get_default_channels(),
-          RTHybridHindmarshRose1984Neuron::get_default_vars()) {
-
-  Component::instance = this;
+  auto *timer = new QTimer(this);
+  timer->setInterval(1000);
+  QObject::connect(timer, &QTimer::timeout, this,
+                   &RTHybridHindmarshRose1984Neuron::Panel::refresh);
+  timer->start();
 }
 
 void RTHybridHindmarshRose1984Neuron::Panel::refresh() {
-  auto *comp = RTHybridHindmarshRose1984Neuron::Component::instance;
-  if (comp && v_edit) {
-    v_edit->setText(
-        QString::number(comp->vars_model[NM_HINDMARSH_ROSE_1984_V]));
-  }
-  if (comp && sp_edit) {
-    sp_edit->setText(QString::number(comp->s_points));
-  }
-  if (comp && dt_edit) {
-    dt_edit->setText(
-        QString::number(comp->params_model[NM_HINDMARSH_ROSE_1984_DT]));
-  }
-  if (comp && syn_edit) {
-    syn_edit->setText(
-        QString::number(comp->params_model[NM_HINDMARSH_ROSE_1984_SYN]));
-  }
+  auto *hostplugin = dynamic_cast<RTHybridHindmarshRose1984Neuron::Plugin *>(
+      this->getHostPlugin());
+  const RTHybridHindmarshRose1984Neuron::neuron_state_t n_state =
+      hostplugin->get_neuron_state();
+  v_edit->setText(QString::number(n_state.v));
+  sp_edit->setText(QString::number(n_state.s_points));
+  dt_edit->setText(QString::number(n_state.dt_points));
+  syn_edit->setText(QString::number(n_state.syn_points));
 }
 
-void RTHybridHindmarshRose1984Neuron::Component::initParameters(void) {
+void RTHybridHindmarshRose1984Neuron::Component::init_parameters(void) {
   burst_duration_value = getValue<double>(V_NM_HINDMARSH_ROSE_1984_BD);
   burst_duration = burst_duration_value;
   freq = 1.0 / (period * 1e-3);
@@ -146,6 +153,17 @@ void RTHybridHindmarshRose1984Neuron::Component::initParameters(void) {
       getValue<double>(V_NM_HINDMARSH_ROSE_1984_D);
 }
 
+RTHybridHindmarshRose1984Neuron::neuron_state_t
+RTHybridHindmarshRose1984Neuron::Plugin::get_neuron_state() {
+
+  RTHybridHindmarshRose1984Neuron::neuron_state_t stat;
+  while (this->component_fifo->read(
+             &stat, sizeof(RTHybridHindmarshRose1984Neuron::neuron_state_t)) >
+         0) {
+  };
+  return stat;
+}
+
 void RTHybridHindmarshRose1984Neuron::Component::execute() {
   // This is the real-time function that will be called
 
@@ -169,12 +187,23 @@ void RTHybridHindmarshRose1984Neuron::Component::execute() {
     writeoutput(0, vars_model[NM_HINDMARSH_ROSE_1984_V] / 1000.0);
     writeoutput(1, vars_model[NM_HINDMARSH_ROSE_1984_V]);
 
+    neuron_state.v = vars_model[NM_HINDMARSH_ROSE_1984_V];
+    neuron_state.dt_points = params_model[NM_HINDMARSH_ROSE_1984_DT];
+    neuron_state.syn_points = params_model[NM_HINDMARSH_ROSE_1984_SYN];
+    neuron_state.s_points = s_points;
+
+    this->fifo->writeRT(
+        &this->neuron_state,
+        sizeof(RTHybridHindmarshRose1984Neuron::neuron_state_t));
+
     break;
   case RT::State::INIT:
     period = RT::OS::getPeriod() * 1e-6; // ms
     freq = 1.0 / (period * 1e-3);
 
-    this->initParameters();
+    this->neuron_state = {0.0, 0.0, 0.0, 0.0};
+
+    this->init_parameters();
     setState(RT::State::EXEC);
 
     break;
@@ -182,7 +211,7 @@ void RTHybridHindmarshRose1984Neuron::Component::execute() {
     period = RT::OS::getPeriod() * 1e-6; // ms
     freq = 1.0 / (period * 1e-3);
 
-    this->initParameters();
+    this->init_parameters();
     setState(RT::State::PAUSE);
     break;
   case RT::State::PERIOD:
@@ -434,10 +463,10 @@ void RTHybridHindmarshRose1984Neuron::Component::runge_kutta_65(
 }
 
 ///////// DO NOT MODIFY BELOW //////////
-// The exception is if your plugin is not going to need real-time functionality.
-// For this case just replace the craeteRTXIComponent return type to nullptr.
-// RTXI will automatically handle that case and won't attach a component to the
-// real time thread for your plugin.
+// The exception is if your plugin is not going to need real-time
+// functionality. For this case just replace the craeteRTXIComponent return
+// type to nullptr. RTXI will automatically handle that case and won't attach
+// a component to the real time thread for your plugin.
 
 std::unique_ptr<Widgets::Plugin> createRTXIPlugin(Event::Manager *ev_manager) {
   return std::make_unique<RTHybridHindmarshRose1984Neuron::Plugin>(ev_manager);
