@@ -162,6 +162,11 @@ void RTHybridHindmarshRose1984Neuron::Component::init_parameters(void) {
       getValue<double>(V_NM_HINDMARSH_ROSE_1984_C);
   params_model[NM_HINDMARSH_ROSE_1984_D] =
       getValue<double>(V_NM_HINDMARSH_ROSE_1984_D);
+
+  params_model[NM_HINDMARSH_ROSE_1984_DT] =
+      getValue<double>(V_NM_HINDMARSH_ROSE_1984_DT);
+  params_model[NM_HINDMARSH_ROSE_1984_SYN] =
+      getValue<double>(V_NM_HINDMARSH_ROSE_1984_SYN);
 }
 
 void RTHybridHindmarshRose1984Neuron::Component::execute() {
