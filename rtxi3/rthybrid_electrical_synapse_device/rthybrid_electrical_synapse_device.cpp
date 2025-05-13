@@ -23,7 +23,6 @@
 
 #include <QTimer>
 #include <cmath>
-#include <qlineedit.h>
 #include <rtxi/fifo.hpp>
 #include <rtxi/rt.hpp>
 #include <rtxi/rtos.hpp>
