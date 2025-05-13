@@ -19,6 +19,7 @@
 /*
  * This is a template implementation file for a user module,
  */
+#include <rtxi/event.hpp>
 #include <rtxi/io.hpp>
 #include <rtxi/widgets.hpp>
 
