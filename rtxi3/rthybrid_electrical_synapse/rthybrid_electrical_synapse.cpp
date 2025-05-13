@@ -22,6 +22,7 @@
 #include "rthybrid_electrical_synapse.hpp"
 
 #include <QTimer>
+#include <cmath>
 #include <qlineedit.h>
 #include <rtxi/fifo.hpp>
 #include <rtxi/rt.hpp>

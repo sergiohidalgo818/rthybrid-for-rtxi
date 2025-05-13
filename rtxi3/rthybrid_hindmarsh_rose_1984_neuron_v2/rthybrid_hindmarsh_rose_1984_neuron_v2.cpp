@@ -169,10 +169,12 @@ void RTHybridHindmarshRose1984NeuronV2::Component::init_parameters(void) {
 
   params_model[NM_HINDMARSH_ROSE_1984_DT] =
       getValue<double>(V_NM_HINDMARSH_ROSE_1984_DT);
-  params_model[NM_HINDMARSH_ROSE_1984_SYN] = 0.0;
+  params_model[NM_HINDMARSH_ROSE_1984_SYN] =
+      getValue<double>(V_NM_HINDMARSH_ROSE_1984_SYN);
 }
 void RTHybridHindmarshRose1984NeuronV2::Component::execute() {
   // This is the real-time function that will be called
+
   switch (this->getState()) {
   case RT::State::EXEC:
     int i;
@@ -205,16 +207,16 @@ void RTHybridHindmarshRose1984NeuronV2::Component::execute() {
     break;
   case RT::State::INIT:
     period = RT::OS::getPeriod() * 1e-6; // ms
-
     freq = 1.0 / (period * 1e-3);
 
+    this->neuron_state = {0.0, 0.0, 0.0, 0.0};
+
     this->init_parameters();
-    setState(RT::State::EXEC);
+    setState(RT::State::PAUSE);
 
     break;
   case RT::State::MODIFY:
     period = RT::OS::getPeriod() * 1e-6; // ms
-
     freq = 1.0 / (period * 1e-3);
 
     this->init_parameters();
@@ -245,6 +247,7 @@ void RTHybridHindmarshRose1984NeuronV2::Component::execute() {
     setState(RT::State::EXEC);
 
     break;
+
   default:
     break;
   }
@@ -260,7 +263,9 @@ void RTHybridHindmarshRose1984NeuronV2::Component::execute() {
 
 void RTHybridHindmarshRose1984NeuronV2::Component::nm_hindmarsh_rose_1984_f(
     double *vars, double *ret, double *params, double syn) {
-  params[NM_HINDMARSH_ROSE_1984_SYN] = syn;
+  if (syn != 0.0) {
+    params[NM_HINDMARSH_ROSE_1984_SYN] = syn;
+  }
 
   ret[NM_HINDMARSH_ROSE_1984_V] = nm_hindmarsh_rose_1984_v(vars, params);
   ret[NM_HINDMARSH_ROSE_1984_Y] = nm_hindmarsh_rose_1984_y(vars, params);
@@ -417,10 +422,6 @@ void RTHybridHindmarshRose1984NeuronV2::Component::runge_kutta_65(
   double apoyo[dim], retorno[dim];
   double k[6][dim];
   int j;
-
-  if (aux == NAN) {
-    aux = 0.0;
-  }
 
   (*f)(vars, retorno, params, aux);
   for (j = 0; j < dim; ++j) {

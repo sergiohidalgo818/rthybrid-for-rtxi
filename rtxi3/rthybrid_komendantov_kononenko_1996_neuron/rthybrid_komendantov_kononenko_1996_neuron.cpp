@@ -257,8 +257,11 @@ void RTHybridKomendantovKononenko1996Neuron::Component::execute() {
     period = RT::OS::getPeriod() * 1e-6; // ms
     freq = 1.0 / (period * 1e-3);
 
+    this->neuron_state = {0.0, 0.0, 0.0, 0.0};
+
     this->init_parameters();
-    setState(RT::State::EXEC);
+    setState(RT::State::PAUSE);
+
     break;
   case RT::State::MODIFY:
     period = RT::OS::getPeriod() * 1e-6; // ms
@@ -268,19 +271,31 @@ void RTHybridKomendantovKononenko1996Neuron::Component::execute() {
     setState(RT::State::PAUSE);
     break;
   case RT::State::PERIOD:
+    period = RT::OS::getPeriod() * 1e-6; // ms
+
     freq = 1.0 / (period * 1e-3);
     s_points = (int)(set_pts_burst(burst_duration) / (burst_duration * freq));
     if (s_points == 0)
       s_points = 1;
+
     setState(RT::State::PAUSE);
 
     break;
   case RT::State::PAUSE:
+
+    writeoutput(0, 0);
+    writeoutput(1, 0);
+
     break;
   case RT::State::UNPAUSE:
-
+    freq = 1.0 / (period * 1e-3);
+    s_points = (int)(set_pts_burst(burst_duration) / (burst_duration * freq));
+    if (s_points == 0)
+      s_points = 1;
     setState(RT::State::EXEC);
+
     break;
+
   default:
     break;
   }
@@ -626,7 +641,9 @@ double RTHybridKomendantovKononenko1996Neuron::Component::
 void RTHybridKomendantovKononenko1996Neuron::Component::
     nm_komendantov_kononenko_1996_f(double *vars, double *ret, double *params,
                                     double syn) {
-  params[NM_KOMENDANTOV_KONONENKO_1996_SYN] = syn;
+  if (syn != 0.0) {
+    params[NM_KOMENDANTOV_KONONENKO_1996_SYN] = syn;
+  }
 
   ret[NM_KOMENDANTOV_KONONENKO_1996_V] =
       nm_komendantov_kononenko_1996_V(vars, params);

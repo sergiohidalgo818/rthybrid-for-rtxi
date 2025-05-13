@@ -165,7 +165,8 @@ void RTHybridHindmarshRose1984Neuron::Component::init_parameters(void) {
 
   params_model[NM_HINDMARSH_ROSE_1984_DT] =
       getValue<double>(V_NM_HINDMARSH_ROSE_1984_DT);
-  params_model[NM_HINDMARSH_ROSE_1984_SYN] = 0.0;
+  params_model[NM_HINDMARSH_ROSE_1984_SYN] =
+      getValue<double>(V_NM_HINDMARSH_ROSE_1984_V);
 }
 
 void RTHybridHindmarshRose1984Neuron::Component::execute() {
@@ -208,7 +209,7 @@ void RTHybridHindmarshRose1984Neuron::Component::execute() {
     this->neuron_state = {0.0, 0.0, 0.0, 0.0};
 
     this->init_parameters();
-    setState(RT::State::EXEC);
+    setState(RT::State::PAUSE);
 
     break;
   case RT::State::MODIFY:
@@ -258,7 +259,9 @@ void RTHybridHindmarshRose1984Neuron::Component::execute() {
 
 void RTHybridHindmarshRose1984Neuron::Component::nm_hindmarsh_rose_1984_f(
     double *vars, double *ret, double *params, double syn) {
-  params[NM_HINDMARSH_ROSE_1984_SYN] = syn;
+  if (syn != 0.0) {
+    params[NM_HINDMARSH_ROSE_1984_SYN] = syn;
+  }
 
   ret[NM_HINDMARSH_ROSE_1984_V] = nm_hindmarsh_rose_1984_v(vars, params);
   ret[NM_HINDMARSH_ROSE_1984_Y] = nm_hindmarsh_rose_1984_y(vars, params);
@@ -415,10 +418,6 @@ void RTHybridHindmarshRose1984Neuron::Component::runge_kutta_65(
   double apoyo[dim], retorno[dim];
   double k[6][dim];
   int j;
-
-  if (!aux) {
-    aux = 0.0;
-  }
 
   (*f)(vars, retorno, params, aux);
   for (j = 0; j < dim; ++j) {
