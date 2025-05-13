@@ -166,15 +166,9 @@ void RTHybridHindmarshRose1984NeuronV2::Component::init_parameters(void) {
       getValue<double>(V_NM_HINDMARSH_ROSE_1984_C);
   params_model[NM_HINDMARSH_ROSE_1984_D] =
       getValue<double>(V_NM_HINDMARSH_ROSE_1984_D);
-
-  params_model[NM_HINDMARSH_ROSE_1984_DT] =
-      getValue<double>(V_NM_HINDMARSH_ROSE_1984_DT);
-  params_model[NM_HINDMARSH_ROSE_1984_SYN] =
-      getValue<double>(V_NM_HINDMARSH_ROSE_1984_SYN);
 }
 void RTHybridHindmarshRose1984NeuronV2::Component::execute() {
   // This is the real-time function that will be called
-
   switch (this->getState()) {
   case RT::State::EXEC:
     int i;
@@ -208,44 +202,25 @@ void RTHybridHindmarshRose1984NeuronV2::Component::execute() {
   case RT::State::INIT:
     period = RT::OS::getPeriod() * 1e-6; // ms
     freq = 1.0 / (period * 1e-3);
-
     this->neuron_state = {0.0, 0.0, 0.0, 0.0};
-
-    this->init_parameters();
-    setState(RT::State::PAUSE);
-
-    break;
-  case RT::State::MODIFY:
-    period = RT::OS::getPeriod() * 1e-6; // ms
-    freq = 1.0 / (period * 1e-3);
-
     this->init_parameters();
     setState(RT::State::PAUSE);
     break;
+
   case RT::State::PERIOD:
+  case RT::State::MODIFY:
+  case RT::State::UNPAUSE:
     period = RT::OS::getPeriod() * 1e-6; // ms
-
     freq = 1.0 / (period * 1e-3);
     s_points = (int)(set_pts_burst(burst_duration) / (burst_duration * freq));
-    if (s_points == 0)
-      s_points = 1;
-
-    setState(RT::State::PAUSE);
-
+    this->neuron_state = {0.0, 0.0, 0.0, 0.0};
+    this->init_parameters();
+    setState(RT::State::EXEC);
     break;
-  case RT::State::PAUSE:
 
+  case RT::State::PAUSE:
     writeoutput(0, 0);
     writeoutput(1, 0);
-
-    break;
-  case RT::State::UNPAUSE:
-    freq = 1.0 / (period * 1e-3);
-    s_points = (int)(set_pts_burst(burst_duration) / (burst_duration * freq));
-    if (s_points == 0)
-      s_points = 1;
-    setState(RT::State::EXEC);
-
     break;
 
   default:
@@ -263,9 +238,7 @@ void RTHybridHindmarshRose1984NeuronV2::Component::execute() {
 
 void RTHybridHindmarshRose1984NeuronV2::Component::nm_hindmarsh_rose_1984_f(
     double *vars, double *ret, double *params, double syn) {
-  if (syn != 0.0) {
-    params[NM_HINDMARSH_ROSE_1984_SYN] = syn;
-  }
+  params[NM_HINDMARSH_ROSE_1984_SYN] = syn;
 
   ret[NM_HINDMARSH_ROSE_1984_V] = nm_hindmarsh_rose_1984_v(vars, params);
   ret[NM_HINDMARSH_ROSE_1984_Y] = nm_hindmarsh_rose_1984_y(vars, params);

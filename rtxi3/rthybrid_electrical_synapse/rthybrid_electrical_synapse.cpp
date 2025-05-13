@@ -99,7 +99,7 @@ RTHybridElectricalSynapse::Panel::Panel(QMainWindow *main_window,
   QTimer *timer = new QTimer(this);
   connect(timer, &QTimer::timeout, this,
           &RTHybridElectricalSynapse::Panel::refresh);
-  timer->start(500); // refresh every 500 ms
+  timer->start(1000); // refresh every 500 ms
 }
 RTHybridElectricalSynapse::synapse_state_t
 RTHybridElectricalSynapse::Plugin::get_synapse_state() {
@@ -160,11 +160,11 @@ void RTHybridElectricalSynapse::Component::execute() {
     setState(RT::State::PAUSE);
     break;
   case RT::State::MODIFY:
-    setState(RT::State::INIT);
+    setState(RT::State::EXEC);
     break;
   case RT::State::PERIOD:
     period = RT::OS::getPeriod() * 1e-6; // ms
-    setState(RT::State::PAUSE);
+    setState(RT::State::EXEC);
     break;
   case RT::State::PAUSE:
     break;

@@ -125,7 +125,6 @@ public:
   // Additional functionality needed for RealTime computation is to be placed
   // here
 
-  analyzer_state_t get_analyzer_states();
   RT::OS::Fifo *get_fifo_ptr() { return this->fifo.get(); }
 
 private:

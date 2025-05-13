@@ -129,7 +129,6 @@ public:
   // Additional functionality needed for RealTime computation is to be placed
   // here
 
-  scaler_state_t get_scaler_states();
   RT::OS::Fifo *get_fifo_ptr() { return this->fifo.get(); }
 
 private:

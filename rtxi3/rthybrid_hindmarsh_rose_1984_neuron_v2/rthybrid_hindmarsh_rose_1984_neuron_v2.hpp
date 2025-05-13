@@ -150,7 +150,6 @@ public:
   void execute() override;
   // Additional functionality needed for RealTime computation is to be placed
   // here
-  neuron_state_t get_neuron_states();
   RT::OS::Fifo *get_fifo_ptr() { return this->fifo.get(); }
 
 private:

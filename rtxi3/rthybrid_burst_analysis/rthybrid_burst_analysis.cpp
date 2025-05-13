@@ -239,14 +239,15 @@ void RTHybridBurstAnalysis::Component::execute() {
     setState(RT::State::PAUSE);
     break;
   case RT::State::MODIFY:
-    setState(RT::State::INIT);
-    break;
   case RT::State::PERIOD:
     period = RT::OS::getPeriod() * 1e-6;
     freq = 1.0 / (period * 1e-3);
+    observation_time = getValue<double>(BURST_ANALYSIS_OBST);
 
-    setState(RT::State::PAUSE);
+    init_parameters();
+    setState(RT::State::EXEC);
     break;
+
   case RT::State::PAUSE:
     break;
   case RT::State::UNPAUSE:
