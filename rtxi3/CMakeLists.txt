@@ -1,7 +1,6 @@
 add_subdirectory(rthybrid_amplitude_scale_offset)
 add_subdirectory(rthybrid_burst_analysis)
 add_subdirectory(rthybrid_electrical_synapse)
-add_subdirectory(rthybrid_electrical_synapse_device)
 add_subdirectory(rthybrid_hindmarsh_rose_1984_neuron)
 add_subdirectory(rthybrid_hindmarsh_rose_1984_neuron_v2)
 add_subdirectory(rthybrid_komendantov_kononenko_1996_neuron)
