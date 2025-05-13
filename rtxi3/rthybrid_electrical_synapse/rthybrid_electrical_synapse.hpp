@@ -19,6 +19,7 @@
 /*
  * This is a template implementation file for a user module,
  */
+#include <rtxi/event.hpp>
 #include <rtxi/io.hpp>
 #include <rtxi/widgets.hpp>
 
@@ -92,6 +93,7 @@ private:
 class Plugin : public Widgets::Plugin {
 
 public:
+  void receiveEvent(Event::Object *event) override;
   explicit Plugin(Event::Manager *ev_manager);
   synapse_state_t get_synapse_state();
 

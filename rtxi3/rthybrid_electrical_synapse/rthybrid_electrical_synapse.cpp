@@ -27,7 +27,28 @@
 #include <rtxi/fifo.hpp>
 #include <rtxi/rt.hpp>
 #include <rtxi/rtos.hpp>
-
+void RTHybridElectricalSynapse::Plugin::receiveEvent(Event::Object *event) {
+  auto *module_panel =
+      dynamic_cast<RTHybridElectricalSynapse::Panel *>(this->getPanel());
+  switch (event->getType()) {
+  case Event::Type::RT_THREAD_INSERT_EVENT:
+  case Event::Type::RT_DEVICE_INSERT_EVENT:
+    // module_panel->updateBlockInfo();
+    break;
+  case Event::Type::RT_THREAD_REMOVE_EVENT:
+    // module_panel->updateBlockChannels(
+    //     std::any_cast<RT::Thread *>(event->getParam("thread")));
+    // module_panel->updateBlockInfo();
+    break;
+  case Event::Type::RT_DEVICE_REMOVE_EVENT:
+    // module_panel->updateBlockChannels(
+    //     std::any_cast<RT::Device *>(event->getParam("device")));
+    // module_panel->updateBlockInfo();
+    break;
+  default:
+    break;
+  }
+}
 RTHybridElectricalSynapse::Component::Component(Widgets::Plugin *hplugin)
     : Widgets::Component(hplugin,
                          std::string(RTHybridElectricalSynapse::MODULE_NAME),
