@@ -49,7 +49,7 @@ inline std::vector<Widgets::Variable::Info> get_default_vars() {
 
       {ELECTRICAL_SYNAPSE_G, "g (uS)", "Conductance (uS)",
        Widgets::Variable::DOUBLE_PARAMETER, -0.2},
-      {ELECTRICAL_SYNAPSE_G, "Esyn", "Synaptic inversion potential",
+      {ELECTRICAL_SYNAPSE_ESYN, "Esyn", "Synaptic inversion potential",
        Widgets::Variable::DOUBLE_PARAMETER, -1.92},
       {ELECTRICAL_SYNAPSE_SFAST, "Sfast", "",
        Widgets::Variable::DOUBLE_PARAMETER, -0.44},
