@@ -207,7 +207,9 @@ void RTHybridFastChemicalSynapse::Component::sm_fast_chemical(double v_post,
                                                               double v_pre,
                                                               double *ret) {
   v_pre = v_pre * scale + offset;
-  double temp = (v_post - Esyn) / (1.0 + exp(Sfast * (Vfast - v_pre)));
+  // double temp = (v_post - Esyn) / (1.0 + exp(Sfast * (Vfast - v_pre)));
+
+  double temp = (v_pre - Esyn) / (1.0 + exp(Sfast * (Vfast - v_post)));
 
   *ret = (g[SM_ELECTRICAL_G] * temp);
 
