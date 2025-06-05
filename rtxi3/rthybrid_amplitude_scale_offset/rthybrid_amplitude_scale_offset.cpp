@@ -187,15 +187,12 @@ void RTHybridAmplitudeScaleOffset::Component::execute() {
 
     break;
   case RT::State::MODIFY:
-    period = RT::OS::getPeriod() * 1e-6; // ms
-    init_parameters();
-
-    setState(RT::State::EXEC);
+    setState(RT::State::PAUSE);
     break;
   case RT::State::PERIOD:
     period = RT::OS::getPeriod() * 1e-6; // ms
 
-    setState(RT::State::EXEC);
+    setState(RT::State::PAUSE);
     break;
   case RT::State::PAUSE:
     break;

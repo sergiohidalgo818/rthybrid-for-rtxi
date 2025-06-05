@@ -109,6 +109,7 @@ public:
   // Additional functionality needed for RealTime computation is to be placed
   // here
 
+  synapse_state_t get_synapse_states();
   RT::OS::Fifo *get_fifo_ptr() { return this->fifo.get(); }
 
 private:
